@@ -17,7 +17,7 @@
 
     .container {
       background: #222;
-      color: #fff;
+      color: #defcff;
       padding: 1.5rem;
       border-radius: 1rem;
       max-width: 450px;
@@ -43,9 +43,9 @@
     }
 
     button.price-button {
-      background: #128017;
-      color: #fff;
-      font-weight: bold;
+      background: #99ddff;
+      color: #defcff;
+      #defcff-weight: bold;
       margin: 0.3rem;
       cursor: pointer;
       transition: background 0.2s;
@@ -67,14 +67,14 @@
     }
 
     .watermark {
-      font-size: 0.8rem;
+      #defcff-size: 0.8rem;
       color: #444;
       margin-top: 0.5rem;
     }
 
     .dark-mode-toggle {
       background: #333;
-      color: #fff;
+      color: #defcff;
       border: 1px solid #666;
       margin-top: 1rem;
     }
@@ -85,7 +85,7 @@
     }
 
     body.light-mode .container {
-      background: #fff;
+      background: #defcff;
       color: #000;
     }
 
@@ -167,7 +167,7 @@ function generateBarcode() {
   JsBarcode(canvas, fullBarcode, {
     format: "CODE128",
     displayValue: true,
-    fontSize: 1,
+    fontSize: 8,
     width: 2,
     height: 80,
     margin: 5
