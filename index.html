@@ -143,17 +143,25 @@
       color: #68b06a;
       display: none;
     }
+
+    /* NEW IMAGE STYLE */
+    .bottom-image {
+      margin-top: 15px;
+      max-width: 120px;
+      width: 100%;
+      opacity: 0.9;
+    }
   </style>
 </head>
+
 <body>
 
 <div class="container">
   <img src="Sainsbury's_idRe1DHyjA_1.png" alt="Sainsbury's Logo" />
 
   <input type="text" id="productCode" placeholder="Enter 13 or 8 digit barcode" maxlength="13"
-         oninput="this.value=this.value.replace(/\\D/g,'').slice(0,13)" />
+         oninput="this.value=this.value.replace(/\D/g,'').slice(0,13)" />
 
-  <!-- NEW LABEL INPUT -->
   <input type="text" id="barcodeLabelInput" placeholder="Enter label for barcode" maxlength="30" />
 
   <div>
@@ -169,14 +177,11 @@
   </div>
 
   <div class="barcode-frame">
-    <!-- LABEL DISPLAY -->
     <div id="barcodeLabel" class="barcode-label"></div>
-
     <canvas id="barcodeCanvas" width="400" height="150"></canvas>
     <div class="watermark">EasyP55 little fraud boy bbancm <br> oli got caught by co-op police <br> fuhhh paying full price</div>
   </div>
 
-  <!-- SOCIALS -->
   <div class="socials">
 
     <div class="social-item" onclick="copyText('imjustsomeguyy', this)">
@@ -198,6 +203,10 @@
   </div>
 
   <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Theme🌙☀️</button>
+
+  <!-- ✅ YOUR NEW IMAGE -->
+  <img src="triad.png" alt="Triad Image" class="bottom-image" />
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
