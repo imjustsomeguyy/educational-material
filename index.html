@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Barcode Generator</title>
+<title>Sainsbury's Barcode Generator - 55</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
@@ -13,19 +13,25 @@ body {
   margin: 0;
   padding: 1rem;
   text-align: center;
-  transition: all 0.4s ease;
+  transition: all 0.3s ease;
 }
 
-/* container */
 .container {
   background: #222827;
+  color: #dfeee0;
   padding: 1.5rem;
   border-radius: 1rem;
   max-width: 450px;
   margin: auto;
+  box-shadow: 0 20px rgba(0,0,0,0.5);
+  position: relative;
 }
 
-/* inputs/buttons */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
 input, button {
   padding: 0.6rem;
   margin: 0.5rem 0;
@@ -34,13 +40,16 @@ input, button {
   border: none;
 }
 
+input[type="text"], input[type="number"] {
+  width: calc(100% - 1rem);
+}
+
 button.price-button {
   background: #68b06a;
-  color: #fff;
+  color: #ffffff;
   cursor: pointer;
 }
 
-/* barcode */
 .barcode-frame {
   background: #e6efe7;
   padding: 1rem;
@@ -48,98 +57,129 @@ button.price-button {
   margin-top: 1rem;
 }
 
+.barcode-label {
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  color: #1f2b21;
+  font-weight: bold;
+}
+
 .watermark {
   font-size: 0.5rem;
+  color: #6b7c6e;
+}
+
+.socials {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.social-item {
+  background: #2a2f2d;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.bottom-image {
+  margin-top: 15px;
+  max-width: 120px;
 }
 
 /* ===== THEME BUTTON ===== */
 .theme-btn {
-  margin-top: 1rem;
   background: #2a2f2d;
   color: #fff;
+  margin-top: 1rem;
   cursor: pointer;
 }
 
-/* ===== PANEL ===== */
+/* ===== DROPDOWN PANEL ===== */
 .theme-panel {
-  position: fixed;
-  bottom: 20px;
+  position: absolute;
+  top: calc(100% - 10px);
   left: 50%;
-  transform: translateX(-50%) translateY(120%);
+  transform: translateX(-50%) scale(0.95);
+  opacity: 0;
   background: #222827;
-  padding: 1rem;
-  border-radius: 1rem;
-  width: 300px;
-  transition: all 0.4s ease;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  padding: 10px;
+  border-radius: 12px;
+  width: 220px;
+  transition: all 0.25s ease;
+  pointer-events: none;
 }
 
 .theme-panel.open {
-  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: all;
 }
 
-/* toggle row */
+/* mode buttons */
 .mode-row {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .mode-btn {
   flex: 1;
-  margin: 0 5px;
-  padding: 8px;
+  padding: 6px;
   border-radius: 8px;
-  cursor: pointer;
   background: #333;
+  cursor: pointer;
 }
 
 .mode-btn.active {
   outline: 2px solid #68b06a;
 }
 
-/* colour grid */
+/* colors */
 .color-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(4,1fr);
+  gap: 6px;
 }
 
 .color {
   width: 100%;
   padding-top: 100%;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   position: relative;
 }
 
 .color.active::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border: 2px solid white;
-  border-radius: 12px;
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border:2px solid white;
+  border-radius:10px;
 }
 
 /* color presets */
-.c-default { background:#222827; }
-.c-green { background:#1f3d2b; }
-.c-blue { background:#1c2f4a; }
-.c-red { background:#4a1c1c; }
-.c-orange { background:#4a2f1c; }
-.c-purple { background:#2f1c4a; }
-.c-teal { background:#1c4a46; }
+.c-default {background:#222827;}
+.c-green {background:#1f3d2b;}
+.c-blue {background:#1c2f4a;}
+.c-red {background:#4a1c1c;}
+.c-orange {background:#4a2f1c;}
+.c-purple {background:#2f1c4a;}
+.c-teal {background:#1c4a46;}
 
-/* LIGHT MODE */
-body.light {
+/* light mode */
+body.light-mode {
   background:#f3faf4;
   color:#1f2b21;
 }
 
-body.light .container {
-  background:#fff;
+body.light-mode .container {
+  background:#ffffff;
+  color:#1f2b21;
 }
-
 </style>
 </head>
 
@@ -147,28 +187,43 @@ body.light .container {
 
 <div class="container">
 
-<h3>Barcode Generator</h3>
+<img src="Sainsbury's_idRe1DHyjA_1.png" />
 
-<input id="productCode" placeholder="Product code">
-<input id="price" placeholder="Price">
+<input type="text" id="productCode" placeholder="Enter barcode" />
+<input type="text" id="barcodeLabelInput" placeholder="Label" />
 
-<button onclick="generate()">Generate</button>
+<div>
+<button class="price-button" onclick="setPriceAndGenerate(10)">10p</button>
+<button class="price-button" onclick="setPriceAndGenerate(49)">49p</button>
+<button class="price-button" onclick="setPriceAndGenerate(100)">£1</button>
+<button class="price-button" onclick="showCustomPrice()">Custom</button>
+</div>
+
+<div id="customPriceContainer" style="display:none;">
+<input type="number" id="price" placeholder="Price" />
+<button onclick="generateBarcode()">Generate</button>
+</div>
 
 <div class="barcode-frame">
-<canvas id="barcode"></canvas>
-<div class="watermark">tiny watermark text</div>
+<div id="barcodeLabel"></div>
+<canvas id="barcodeCanvas"></canvas>
+<div class="watermark">EasyP55 little fraud boy bbancm</div>
 </div>
 
-<button class="theme-btn" onclick="togglePanel()">Theme 🎨</button>
-
+<div class="socials">
+<div class="social-item" onclick="copyText('imjustsomeguyy', this)">imjustsomeguyy</div>
+<div class="social-item" onclick="copyText('somerandomahguy', this)">somerandomahguy</div>
 </div>
+
+<!-- BUTTON -->
+<button class="theme-btn" onclick="toggleThemeMenu()">Theme</button>
 
 <!-- PANEL -->
 <div id="themePanel" class="theme-panel">
 
 <div class="mode-row">
-<div class="mode-btn active" onclick="setMode('dark', this)">Dark</div>
-<div class="mode-btn" onclick="setMode('light', this)">Light</div>
+<div class="mode-btn active" onclick="setMode('dark', this)"></div>
+<div class="mode-btn" onclick="setMode('light', this)"></div>
 </div>
 
 <div class="color-grid">
@@ -183,43 +238,28 @@ body.light .container {
 
 </div>
 
+<img src="methodtriad.png" class="bottom-image" />
+
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
 <script>
-function generate(){
-  let code = document.getElementById("productCode").value;
-  JsBarcode("#barcode", code, {format:"CODE128"});
-}
-
-/* panel */
-function togglePanel(){
+function toggleThemeMenu(){
   document.getElementById("themePanel").classList.toggle("open");
 }
 
-/* mode */
 function setMode(mode, el){
-  document.body.classList.remove("light");
-  if(mode === "light") document.body.classList.add("light");
-
+  document.body.classList.toggle("light-mode", mode==="light");
   document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
   el.classList.add("active");
 }
 
-/* color */
 function setColor(color, el){
-  document.body.dataset.color = color;
-
   document.querySelectorAll(".color").forEach(c=>c.classList.remove("active"));
   el.classList.add("active");
 
-  applyTheme();
-}
-
-/* apply combined theme */
-function applyTheme(){
-  let color = document.body.dataset.color;
-
-  let map = {
+  const map = {
     default:"#222827",
     green:"#1f3d2b",
     blue:"#1c2f4a",
