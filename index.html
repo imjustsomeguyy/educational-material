@@ -12,7 +12,7 @@
       margin: 0;
       padding: 1rem;
       text-align: center;
-      transition: background 3.0s, color 2.5s;
+      transition: background 0.5s, color 0.5s;
     }
 
     .container {
@@ -29,14 +29,9 @@
       max-width: 100%;
       height: auto;
       filter: brightness(1.2);
-      transition: filter 0.5s;
     }
 
-    body.light-mode img {
-      filter: brightness(0.3) saturate(1.5);
-    }
-
-    input, button {
+    input, button, select {
       padding: 0.6rem;
       margin: 0.5rem 0;
       font-size: 0.8rem;
@@ -53,11 +48,6 @@
       color: #ffffff;
       margin: 0.3rem;
       cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button.price-button:hover {
-      background: #4f9a52;
     }
 
     .barcode-frame {
@@ -78,36 +68,12 @@
       max-width: 100%;
     }
 
+    /* ✅ WATERMARK HALF SIZE */
     .watermark {
       color: #6b7c6e;
       margin-top: 0.5rem;
-    }
-
-    .dark-mode-toggle {
-      background: #2a2f2d;
-      color: #cfe8d1;
-      border: 1px solid #555;
-      margin-top: 1rem;
-    }
-
-    body.light-mode {
-      background: #f3faf4;
-      color: #1f2b21;
-    }
-
-    body.light-mode .container {
-      background: #ffffff;
-      color: #1f2b21;
-    }
-
-    body.light-mode button.price-button {
-      background: #68b06a;
-      color: #ffffff;
-    }
-
-    body.light-mode .dark-mode-toggle {
-      background: #e0efe2;
-      color: #1f2b21;
+      font-size: 0.5rem;
+      line-height: 1.2;
     }
 
     .socials {
@@ -127,15 +93,6 @@
       align-items: center;
       gap: 6px;
       font-size: 0.8rem;
-      transition: background 0.2s;
-    }
-
-    .social-item:hover {
-      background: #3a413f;
-    }
-
-    body.light-mode .social-item {
-      background: #e0efe2;
     }
 
     .copy-msg {
@@ -150,6 +107,27 @@
       width: 100%;
       opacity: 0.9;
     }
+
+    /* ✅ THEMES */
+    body.light {
+      background: #f3faf4;
+      color: #1f2b21;
+    }
+
+    body.light .container {
+      background: #ffffff;
+      color: #1f2b21;
+    }
+
+    body.green {
+      background: #0f1f14;
+      color: #b7e4c7;
+    }
+
+    body.green .container {
+      background: #163524;
+    }
+
   </style>
 </head>
 
@@ -178,32 +156,31 @@
   <div class="barcode-frame">
     <div id="barcodeLabel" class="barcode-label"></div>
     <canvas id="barcodeCanvas" width="400" height="150"></canvas>
-    <div class="watermark">EasyP55 little fraud boy bbancm <br> oli got caught by co-op police <br> fuhhh paying full price</div>
+    <div class="watermark">
+      EasyP55 little fraud boy bbancm <br>
+      oli got caught by co-op police <br>
+      fuhhh paying full price
+    </div>
   </div>
 
   <div class="socials">
-
     <div class="social-item" onclick="copyText('imjustsomeguyy', this)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="#5865F2">
-        <path d="M20 4a16 16 0 0 0-4-1l-.2.4a14 14 0 0 1 3.6 1.7 13 13 0 0 0-3.2-1.5 12 12 0 0 0-4.2 0A13 13 0 0 0 8.8 5a14 14 0 0 1 3.6-1.7L12 3a16 16 0 0 0-4 1C5.6 7.6 5 11 5.2 14.4A16 16 0 0 0 9.6 16l.8-1.1a10 10 0 0 1-1.3-.6l.3-.2c2.5 1.1 5.3 1.1 7.8 0l.3.2c-.4.2-.9.4-1.3.6l.8 1.1a16 16 0 0 0 4.4-1.6C19 11 18.4 7.6 20 4z"/>
-      </svg>
-      imjustsomeguyy
-      <span class="copy-msg">Copied!</span>
+      imjustsomeguyy <span class="copy-msg">Copied!</span>
     </div>
 
     <div class="social-item" onclick="copyText('somerandomahguy', this)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFC00">
-        <path d="M12 2c2.5 0 4.5 2 4.5 4.5v3.2c.7.5 1.6.8 2.5.8.3 0 .5.2.5.5s-.2.5-.5.5c-.9 0-1.8.3-2.5.8v.7c0 2.5-2 4.5-4.5 4.5s-4.5-2-4.5-4.5v-.7c-.7-.5-1.6-.8-2.5-.8-.3 0-.5-.2-.5-.5s.2-.5.5-.5c.9 0 1.8-.3 2.5-.8V6.5C7.5 4 9.5 2 12 2z"/>
-      </svg>
-      somerandomahguy
-      <span class="copy-msg">Copied!</span>
+      somerandomahguy <span class="copy-msg">Copied!</span>
     </div>
-
   </div>
 
-  <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Theme🌙☀️</button>
+  <!-- ✅ NEW THEME MENU -->
+  <select onchange="setTheme(this.value)">
+    <option value="">Dark (Default)</option>
+    <option value="light">Light</option>
+    <option value="green">Green</option>
+  </select>
 
-  <img src="methodtriad.png" alt="methodtriad Image" class="bottom-image" />
+  <img src="methodtriad.png" class="bottom-image" />
 
 </div>
 
@@ -272,8 +249,9 @@ function showCustomPrice() {
   document.getElementById('customPriceContainer').style.display = 'block';
 }
 
-function toggleDarkMode() {
-  document.body.classList.toggle("light-mode");
+/* ✅ NEW THEME SWITCHER */
+function setTheme(theme) {
+  document.body.className = theme;
 }
 </script>
 
