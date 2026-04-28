@@ -5,24 +5,44 @@
   <title>Sainsbury's Barcode Generator - 55</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    :root {
+      --bg: #1a1f1c;
+      --card: #222827;
+      --text: #dfeee0;
+      --text-sub: #6b7c6e;
+      --accent: #68b06a;
+      --accent-hover: #4f9a52;
+      --btn-bg: #2a2f2d;
+      --btn-border: #555;
+      --barcode-bg: #e6efe7;
+      --barcode-text: #1f2b21;
+      --social-bg: #2a2f2d;
+      --social-hover: #3a413f;
+      --toggle-bg: #2a2f2d;
+      --toggle-color: #cfe8d1;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       font-family: Arial, sans-serif;
-      background-color: #1a1f1c;
-      color: #dfeee0;
+      background-color: var(--bg);
+      color: var(--text);
       margin: 0;
       padding: 1rem;
       text-align: center;
-      transition: background 3.0s, color 2.5s;
+      transition: background 0.4s, color 0.4s;
     }
 
     .container {
-      background: #222827;
-      color: #dfeee0;
+      background: var(--card);
+      color: var(--text);
       padding: 1.5rem;
       border-radius: 1rem;
       max-width: 450px;
       margin: auto;
       box-shadow: 0 20px rgba(0,0,0,0.5);
+      transition: background 0.4s, color 0.4s;
     }
 
     img {
@@ -30,10 +50,6 @@
       height: auto;
       filter: brightness(1.2);
       transition: filter 0.5s;
-    }
-
-    body.light-mode img {
-      filter: brightness(0.3) saturate(1.5);
     }
 
     input, button {
@@ -46,68 +62,45 @@
 
     input[type="text"], input[type="number"] {
       width: calc(100% - 1rem);
+      background: var(--btn-bg);
+      color: var(--text);
+      border: 1px solid var(--btn-border);
+      transition: background 0.3s, color 0.3s;
     }
 
+    input::placeholder { color: var(--text-sub); }
+
     button.price-button {
-      background: #68b06a;
+      background: var(--accent);
       color: #ffffff;
       margin: 0.3rem;
       cursor: pointer;
       transition: background 0.2s;
     }
 
-    button.price-button:hover {
-      background: #4f9a52;
-    }
+    button.price-button:hover { background: var(--accent-hover); }
 
     .barcode-frame {
-      background: #e6efe7;
+      background: var(--barcode-bg);
       padding: 1rem;
       border-radius: 0.8rem;
       margin-top: 1rem;
+      transition: background 0.4s;
     }
 
     .barcode-label {
       font-size: 0.9rem;
       margin-bottom: 0.3rem;
-      color: #1f2b21;
+      color: var(--barcode-text);
       font-weight: bold;
     }
 
-    canvas {
-      max-width: 100%;
-    }
+    canvas { max-width: 100%; }
 
     .watermark {
-      color: #6b7c6e;
+      color: var(--text-sub);
       margin-top: 0.5rem;
-    }
-
-    .dark-mode-toggle {
-      background: #2a2f2d;
-      color: #cfe8d1;
-      border: 1px solid #555;
-      margin-top: 1rem;
-    }
-
-    body.light-mode {
-      background: #f3faf4;
-      color: #1f2b21;
-    }
-
-    body.light-mode .container {
-      background: #ffffff;
-      color: #1f2b21;
-    }
-
-    body.light-mode button.price-button {
-      background: #68b06a;
-      color: #ffffff;
-    }
-
-    body.light-mode .dark-mode-toggle {
-      background: #e0efe2;
-      color: #1f2b21;
+      font-size: 0.75rem;
     }
 
     .socials {
@@ -119,7 +112,7 @@
     }
 
     .social-item {
-      background: #2a2f2d;
+      background: var(--social-bg);
       padding: 0.5rem 0.8rem;
       border-radius: 0.6rem;
       cursor: pointer;
@@ -130,17 +123,11 @@
       transition: background 0.2s;
     }
 
-    .social-item:hover {
-      background: #3a413f;
-    }
-
-    body.light-mode .social-item {
-      background: #e0efe2;
-    }
+    .social-item:hover { background: var(--social-hover); }
 
     .copy-msg {
       font-size: 0.7rem;
-      color: #68b06a;
+      color: var(--accent);
       display: none;
     }
 
@@ -150,10 +137,326 @@
       width: 100%;
       opacity: 0.9;
     }
+
+    /* ── Themes Button ── */
+    .themes-btn {
+      background: var(--btn-bg);
+      color: var(--text);
+      border: 1px solid var(--btn-border);
+      border-radius: 0.6rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      margin-top: 1rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .themes-btn:hover {
+      background: var(--social-hover);
+      transform: scale(1.03);
+    }
+
+    /* ── Backdrop Blur Overlay ── */
+    .theme-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .theme-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Theme Panel ── */
+    .theme-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -46%) scale(0.9);
+      z-index: 101;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1.2rem;
+      padding: 1.6rem 1.4rem;
+      width: min(380px, 90vw);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.22,1,.36,1);
+    }
+
+    .theme-panel.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .theme-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+    }
+
+    .theme-panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-close {
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.4rem;
+      transition: color 0.2s, background 0.2s;
+      line-height: 1;
+    }
+
+    .theme-close:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* ── Theme Grid ── */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.7rem;
+    }
+
+    .theme-card {
+      border-radius: 0.8rem;
+      padding: 0.75rem 0.5rem;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s, transform 0.18s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theme-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+
+    .theme-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(104,176,106,0.2);
+    }
+
+    .theme-swatch {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .theme-swatch-half {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+    }
+
+    .theme-swatch-left { left: 0; }
+    .theme-swatch-right { right: 0; }
+
+    .theme-name {
+      font-size: 0.68rem;
+      text-align: center;
+      color: var(--text);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    /* ─── THEME DEFINITIONS ─── */
+
+    /* 1 – Forest Night (dark green) */
+    [data-theme="forest"] { background: #1e2922; }
+    [data-theme="forest"] .theme-swatch-left  { background: #1a1f1c; }
+    [data-theme="forest"] .theme-swatch-right { background: #68b06a; }
+
+    /* 2 – Ocean Depth (dark blue) */
+    [data-theme="ocean"] { background: #111a28; }
+    [data-theme="ocean"] .theme-swatch-left  { background: #0d1520; }
+    [data-theme="ocean"] .theme-swatch-right { background: #3a8eff; }
+
+    /* 3 – Midnight Violet (dark purple) */
+    [data-theme="violet"] { background: #1c1428; }
+    [data-theme="violet"] .theme-swatch-left  { background: #130e1f; }
+    [data-theme="violet"] .theme-swatch-right { background: #a066e8; }
+
+    /* 4 – Morning Mint (light green) */
+    [data-theme="mint"] { background: #e8f5ea; }
+    [data-theme="mint"] .theme-swatch-left  { background: #f3faf4; }
+    [data-theme="mint"] .theme-swatch-right { background: #2e9e58; }
+    [data-theme="mint"] .theme-name { color: #1f2b21; }
+
+    /* 5 – Golden Hour (light amber) */
+    [data-theme="golden"] { background: #fdf3e3; }
+    [data-theme="golden"] .theme-swatch-left  { background: #fffaf2; }
+    [data-theme="golden"] .theme-swatch-right { background: #d97a18; }
+    [data-theme="golden"] .theme-name { color: #3a2000; }
+
+    /* 6 – Cherry Blossom (light rose) */
+    [data-theme="cherry"] { background: #fce8ef; }
+    [data-theme="cherry"] .theme-swatch-left  { background: #fff0f5; }
+    [data-theme="cherry"] .theme-swatch-right { background: #e0436a; }
+    [data-theme="cherry"] .theme-name { color: #4a0020; }
+
+    /* ─── CSS VARIABLE OVERRIDES PER THEME ─── */
+    body.theme-forest {
+      --bg:#1a1f1c; --card:#222827; --text:#dfeee0; --text-sub:#6b7c6e;
+      --accent:#68b06a; --accent-hover:#4f9a52;
+      --btn-bg:#2a2f2d; --btn-border:#555;
+      --barcode-bg:#e6efe7; --barcode-text:#1f2b21;
+      --social-bg:#2a2f2d; --social-hover:#3a413f;
+    }
+
+    body.theme-ocean {
+      --bg:#0d1520; --card:#111e30; --text:#c8ddfa; --text-sub:#4a6080;
+      --accent:#3a8eff; --accent-hover:#1a70f0;
+      --btn-bg:#162035; --btn-border:#2a4060;
+      --barcode-bg:#ddeeff; --barcode-text:#061428;
+      --social-bg:#162035; --social-hover:#1e2e48;
+    }
+
+    body.theme-violet {
+      --bg:#130e1f; --card:#1c1428; --text:#e0d4f8; --text-sub:#6a5080;
+      --accent:#a066e8; --accent-hover:#8244d4;
+      --btn-bg:#261b3a; --btn-border:#4a3060;
+      --barcode-bg:#f0e8ff; --barcode-text:#1a0a30;
+      --social-bg:#261b3a; --social-hover:#32244e;
+    }
+
+    body.theme-mint {
+      --bg:#f3faf4; --card:#ffffff; --text:#1f2b21; --text-sub:#6a8a6e;
+      --accent:#2e9e58; --accent-hover:#227840;
+      --btn-bg:#e4f4e6; --btn-border:#b0d8b8;
+      --barcode-bg:#d4eeda; --barcode-text:#0e2018;
+      --social-bg:#e4f4e6; --social-hover:#cfebd4;
+    }
+
+    body.theme-golden {
+      --bg:#fffaf2; --card:#ffffff; --text:#3a2000; --text-sub:#9a7040;
+      --accent:#d97a18; --accent-hover:#b86010;
+      --btn-bg:#faeede; --btn-border:#e8c898;
+      --barcode-bg:#fde8c8; --barcode-text:#2a1400;
+      --social-bg:#faeede; --social-hover:#f5e0c0;
+    }
+
+    body.theme-cherry {
+      --bg:#fff0f5; --card:#ffffff; --text:#4a0020; --text-sub:#9a6070;
+      --accent:#e0436a; --accent-hover:#c82850;
+      --btn-bg:#fce8ef; --btn-border:#f0b0c8;
+      --barcode-bg:#ffd8e8; --barcode-text:#3a001a;
+      --social-bg:#fce8ef; --social-hover:#f8d0e0;
+    }
+
+    /* light themes need dark input text */
+    body.theme-mint input,
+    body.theme-golden input,
+    body.theme-cherry input {
+      color: var(--text);
+    }
   </style>
 </head>
 
-<body>
+<body class="theme-forest">
+
+<!-- ── Overlay ── -->
+<div class="theme-overlay" id="themeOverlay" onclick="closeThemePanel()"></div>
+
+<!-- ── Theme Panel ── -->
+<div class="theme-panel" id="themePanel">
+  <div class="theme-panel-header">
+    <div class="theme-panel-title">
+      <!-- Prism icon -->
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,2 22,20 2,20" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+        <line x1="12" y1="2" x2="12" y2="20" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+        <line x1="12" y1="20" x2="20" y2="20" stroke="#68b06a" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="2" y1="20" x2="9" y2="20"  stroke="#3a8eff" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      Themes
+    </div>
+    <button class="theme-close" onclick="closeThemePanel()">✕</button>
+  </div>
+
+  <div class="theme-grid">
+
+    <div class="theme-card" data-theme="forest" onclick="applyTheme('forest', this)">
+      <div class="theme-swatch">
+        <div class="theme-swatch-half theme-swatch-left"></div>
+        <div class="theme-swatch-half theme-swatch-right"></div>
+      </div>
+      <div class="theme-name">Forest<br>Night</div>
+    </div>
+
+    <div class="theme-card" data-theme="ocean" onclick="applyTheme('ocean', this)">
+      <div class="theme-swatch">
+        <div class="theme-swatch-half theme-swatch-left"></div>
+        <div class="theme-swatch-half theme-swatch-right"></div>
+      </div>
+      <div class="theme-name">Ocean<br>Depth</div>
+    </div>
+
+    <div class="theme-card" data-theme="violet" onclick="applyTheme('violet', this)">
+      <div class="theme-swatch">
+        <div class="theme-swatch-half theme-swatch-left"></div>
+        <div class="theme-swatch-half theme-swatch-right"></div>
+      </div>
+      <div class="theme-name">Midnight<br>Violet</div>
+    </div>
+
+    <div class="theme-card" data-theme="mint" onclick="applyTheme('mint', this)">
+      <div class="theme-swatch">
+        <div class="theme-swatch-half theme-swatch-left"></div>
+        <div class="theme-swatch-half theme-swatch-right"></div>
+      </div>
+      <div class="theme-name">Morning<br>Mint</div>
+    </div>
+
+    <div class="theme-card" data-theme="golden" onclick="applyTheme('golden', this)">
+      <div class="theme-swatch">
+        <div class="theme-swatch-half theme-swatch-left"></div>
+        <div class="theme-swatch-half theme-swatch-right"></div>
+      </div>
+      <div class="theme-name">Golden<br>Hour</div>
+    </div>
+
+    <div class="theme-card" data-theme="cherry" onclick="applyTheme('cherry', this)">
+      <div class="theme-swatch">
+        <div class="theme-swatch-half theme-swatch-left"></div>
+        <div class="theme-swatch-half theme-swatch-right"></div>
+      </div>
+      <div class="theme-name">Cherry<br>Blossom</div>
+    </div>
+
+  </div>
+</div>
 
 <div class="container">
   <img src="Sainsbury's_idRe1DHyjA_1.png" alt="Sainsbury's Logo" />
@@ -182,7 +485,6 @@
   </div>
 
   <div class="socials">
-
     <div class="social-item" onclick="copyText('imjustsomeguyy', this)">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="#5865F2">
         <path d="M20 4a16 16 0 0 0-4-1l-.2.4a14 14 0 0 1 3.6 1.7 13 13 0 0 0-3.2-1.5 12 12 0 0 0-4.2 0A13 13 0 0 0 8.8 5a14 14 0 0 1 3.6-1.7L12 3a16 16 0 0 0-4 1C5.6 7.6 5 11 5.2 14.4A16 16 0 0 0 9.6 16l.8-1.1a10 10 0 0 1-1.3-.6l.3-.2c2.5 1.1 5.3 1.1 7.8 0l.3.2c-.4.2-.9.4-1.3.6l.8 1.1a16 16 0 0 0 4.4-1.6C19 11 18.4 7.6 20 4z"/>
@@ -198,83 +500,113 @@
       somerandomahguy
       <span class="copy-msg">Copied!</span>
     </div>
-
   </div>
 
-  <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Theme🌙☀️</button>
+  <!-- Themes Button -->
+  <button class="themes-btn" onclick="openThemePanel()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="12,2 22,20 2,20" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
+      <line x1="12" y1="2" x2="12" y2="20" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+    </svg>
+    Themes
+  </button>
 
   <img src="methodtriad.png" alt="methodtriad Image" class="bottom-image" />
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
 <script>
-function copyText(text, el) {
-  navigator.clipboard.writeText(text);
-  const msg = el.querySelector(".copy-msg");
-  msg.style.display = "inline";
-  setTimeout(() => msg.style.display = "none", 1200);
-}
-
-function padLeft(str, length) {
-  return str.toString().padStart(length, '0');
-}
-
-function calculateCheckDigit(input) {
-  let sum = 0;
-  for (let i = 0; i < input.length; i++) {
-    const digit = parseInt(input[input.length - 1 - i], 10);
-    const weight = (i % 2 === 0) ? 3 : 1;
-    sum += digit * weight;
-  }
-  return (10 - (sum % 10)) % 10;
-}
-
-function generateBarcode() {
-  const productInput = document.getElementById('productCode').value;
-  const priceInput = document.getElementById('price').value;
-  const labelInput = document.getElementById('barcodeLabelInput').value;
-
-  if (!productInput || productInput.length < 8) {
-    alert("Enter a valid barcode (at least 8 digits).");
-    return;
+  // ── Theme Panel ──
+  function openThemePanel() {
+    document.getElementById('themeOverlay').classList.add('open');
+    document.getElementById('themePanel').classList.add('open');
   }
 
-  document.getElementById("barcodeLabel").innerText = labelInput;
+  function closeThemePanel() {
+    document.getElementById('themeOverlay').classList.remove('open');
+    document.getElementById('themePanel').classList.remove('open');
+  }
 
-  const numericProduct = productInput.replace(/\D/g, '');
-  let productDigits = numericProduct.length === 14 ? numericProduct.slice(0, -1) : numericProduct;
-  productDigits = padLeft(productDigits, 13);
+  function applyTheme(name, card) {
+    const themes = ['forest','ocean','violet','mint','golden','cherry'];
+    themes.forEach(t => document.body.classList.remove('theme-' + t));
+    document.body.classList.add('theme-' + name);
 
-  const paddedPrice = padLeft(priceInput, 6);
-  const baseNumber = `91${productDigits}${paddedPrice}`;
-  const checkDigit = calculateCheckDigit(baseNumber);
-  const fullBarcode = `${baseNumber}${checkDigit}`;
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
 
-  JsBarcode("#barcodeCanvas", fullBarcode, {
-    format: "CODE128",
-    displayValue: true,
-    fontSize: 8,
-    width: 2,
-    height: 80,
-    margin: 5
+    setTimeout(closeThemePanel, 250);
+  }
+
+  // Mark default active card on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const defaultCard = document.querySelector('.theme-card[data-theme="forest"]');
+    if (defaultCard) defaultCard.classList.add('active');
   });
-}
 
-function setPriceAndGenerate(pence) {
-  document.getElementById('price').value = pence;
-  document.getElementById('customPriceContainer').style.display = 'none';
-  generateBarcode();
-}
+  // ── Barcode Logic ──
+  function copyText(text, el) {
+    navigator.clipboard.writeText(text);
+    const msg = el.querySelector(".copy-msg");
+    msg.style.display = "inline";
+    setTimeout(() => msg.style.display = "none", 1200);
+  }
 
-function showCustomPrice() {
-  document.getElementById('customPriceContainer').style.display = 'block';
-}
+  function padLeft(str, length) {
+    return str.toString().padStart(length, '0');
+  }
 
-function toggleDarkMode() {
-  document.body.classList.toggle("light-mode");
-}
+  function calculateCheckDigit(input) {
+    let sum = 0;
+    for (let i = 0; i < input.length; i++) {
+      const digit = parseInt(input[input.length - 1 - i], 10);
+      const weight = (i % 2 === 0) ? 3 : 1;
+      sum += digit * weight;
+    }
+    return (10 - (sum % 10)) % 10;
+  }
+
+  function generateBarcode() {
+    const productInput = document.getElementById('productCode').value;
+    const priceInput   = document.getElementById('price').value;
+    const labelInput   = document.getElementById('barcodeLabelInput').value;
+
+    if (!productInput || productInput.length < 8) {
+      alert("Enter a valid barcode (at least 8 digits).");
+      return;
+    }
+
+    document.getElementById("barcodeLabel").innerText = labelInput;
+
+    const numericProduct = productInput.replace(/\D/g, '');
+    let productDigits = numericProduct.length === 14 ? numericProduct.slice(0, -1) : numericProduct;
+    productDigits = padLeft(productDigits, 13);
+
+    const paddedPrice  = padLeft(priceInput, 6);
+    const baseNumber   = `91${productDigits}${paddedPrice}`;
+    const checkDigit   = calculateCheckDigit(baseNumber);
+    const fullBarcode  = `${baseNumber}${checkDigit}`;
+
+    JsBarcode("#barcodeCanvas", fullBarcode, {
+      format: "CODE128",
+      displayValue: true,
+      fontSize: 8,
+      width: 2,
+      height: 80,
+      margin: 5
+    });
+  }
+
+  function setPriceAndGenerate(pence) {
+    document.getElementById('price').value = pence;
+    document.getElementById('customPriceContainer').style.display = 'none';
+    generateBarcode();
+  }
+
+  function showCustomPrice() {
+    document.getElementById('customPriceContainer').style.display = 'block';
+  }
 </script>
 
 </body>
