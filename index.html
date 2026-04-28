@@ -1,257 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Sainsbury's Barcode Generator - 55</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #1a1f1c;
-      color: #dfeee0;
-      margin: 0;
-      padding: 1rem;
-      text-align: center;
-      transition: background 0.5s, color 0.5s;
-    }
+<meta charset="UTF-8" />
+<title>Barcode Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    .container {
-      background: #222827;
-      color: #dfeee0;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      max-width: 450px;
-      margin: auto;
-      box-shadow: 0 20px rgba(0,0,0,0.5);
-    }
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background-color: #1a1f1c;
+  color: #dfeee0;
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.4s ease;
+}
 
-    img {
-      max-width: 100%;
-      height: auto;
-      filter: brightness(1.2);
-    }
+/* container */
+.container {
+  background: #222827;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  max-width: 450px;
+  margin: auto;
+}
 
-    input, button, select {
-      padding: 0.6rem;
-      margin: 0.5rem 0;
-      font-size: 0.8rem;
-      border-radius: 0.5rem;
-      border: none;
-    }
+/* inputs/buttons */
+input, button {
+  padding: 0.6rem;
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+  border-radius: 0.5rem;
+  border: none;
+}
 
-    input[type="text"], input[type="number"] {
-      width: calc(100% - 1rem);
-    }
+button.price-button {
+  background: #68b06a;
+  color: #fff;
+  cursor: pointer;
+}
 
-    button.price-button {
-      background: #68b06a;
-      color: #ffffff;
-      margin: 0.3rem;
-      cursor: pointer;
-    }
+/* barcode */
+.barcode-frame {
+  background: #e6efe7;
+  padding: 1rem;
+  border-radius: 0.8rem;
+  margin-top: 1rem;
+}
 
-    .barcode-frame {
-      background: #e6efe7;
-      padding: 1rem;
-      border-radius: 0.8rem;
-      margin-top: 1rem;
-    }
+.watermark {
+  font-size: 0.5rem;
+}
 
-    .barcode-label {
-      font-size: 0.9rem;
-      margin-bottom: 0.3rem;
-      color: #1f2b21;
-      font-weight: bold;
-    }
+/* ===== THEME BUTTON ===== */
+.theme-btn {
+  margin-top: 1rem;
+  background: #2a2f2d;
+  color: #fff;
+  cursor: pointer;
+}
 
-    canvas {
-      max-width: 100%;
-    }
+/* ===== PANEL ===== */
+.theme-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  background: #222827;
+  padding: 1rem;
+  border-radius: 1rem;
+  width: 300px;
+  transition: all 0.4s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
 
-    /* ✅ WATERMARK HALF SIZE */
-    .watermark {
-      color: #6b7c6e;
-      margin-top: 0.5rem;
-      font-size: 0.5rem;
-      line-height: 1.2;
-    }
+.theme-panel.open {
+  transform: translateX(-50%) translateY(0);
+}
 
-    .socials {
-      margin-top: 1rem;
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
+/* toggle row */
+.mode-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
 
-    .social-item {
-      background: #2a2f2d;
-      padding: 0.5rem 0.8rem;
-      border-radius: 0.6rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.8rem;
-    }
+.mode-btn {
+  flex: 1;
+  margin: 0 5px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #333;
+}
 
-    .copy-msg {
-      font-size: 0.7rem;
-      color: #68b06a;
-      display: none;
-    }
+.mode-btn.active {
+  outline: 2px solid #68b06a;
+}
 
-    .bottom-image {
-      margin-top: 15px;
-      max-width: 120px;
-      width: 100%;
-      opacity: 0.9;
-    }
+/* colour grid */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
 
-    /* ✅ THEMES */
-    body.light {
-      background: #f3faf4;
-      color: #1f2b21;
-    }
+.color {
+  width: 100%;
+  padding-top: 100%;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+}
 
-    body.light .container {
-      background: #ffffff;
-      color: #1f2b21;
-    }
+.color.active::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 2px solid white;
+  border-radius: 12px;
+}
 
-    body.green {
-      background: #0f1f14;
-      color: #b7e4c7;
-    }
+/* color presets */
+.c-default { background:#222827; }
+.c-green { background:#1f3d2b; }
+.c-blue { background:#1c2f4a; }
+.c-red { background:#4a1c1c; }
+.c-orange { background:#4a2f1c; }
+.c-purple { background:#2f1c4a; }
+.c-teal { background:#1c4a46; }
 
-    body.green .container {
-      background: #163524;
-    }
+/* LIGHT MODE */
+body.light {
+  background:#f3faf4;
+  color:#1f2b21;
+}
 
-  </style>
+body.light .container {
+  background:#fff;
+}
+
+</style>
 </head>
 
 <body>
 
 <div class="container">
-  <img src="Sainsbury's_idRe1DHyjA_1.png" alt="Sainsbury's Logo" />
 
-  <input type="text" id="productCode" placeholder="Enter 13 or 8 digit barcode" maxlength="13"
-         oninput="this.value=this.value.replace(/\D/g,'').slice(0,13)" />
+<h3>Barcode Generator</h3>
 
-  <input type="text" id="barcodeLabelInput" placeholder="Enter label for barcode" maxlength="30" />
+<input id="productCode" placeholder="Product code">
+<input id="price" placeholder="Price">
 
-  <div>
-    <button class="price-button" onclick="setPriceAndGenerate(10)">10p</button>
-    <button class="price-button" onclick="setPriceAndGenerate(49)">49p</button>
-    <button class="price-button" onclick="setPriceAndGenerate(100)">£1</button>
-    <button class="price-button" onclick="showCustomPrice()">Custom</button>
-  </div>
+<button onclick="generate()">Generate</button>
 
-  <div id="customPriceContainer" style="display:none;">
-    <input type="number" id="price" placeholder="Enter price in pence" min="1" max="9999" />
-    <button onclick="generateBarcode()">Generate Barcode</button>
-  </div>
+<div class="barcode-frame">
+<canvas id="barcode"></canvas>
+<div class="watermark">tiny watermark text</div>
+</div>
 
-  <div class="barcode-frame">
-    <div id="barcodeLabel" class="barcode-label"></div>
-    <canvas id="barcodeCanvas" width="400" height="150"></canvas>
-    <div class="watermark">
-      EasyP55 little fraud boy bbancm <br>
-      oli got caught by co-op police <br>
-      fuhhh paying full price
-    </div>
-  </div>
+<button class="theme-btn" onclick="togglePanel()">Theme 🎨</button>
 
-  <div class="socials">
-    <div class="social-item" onclick="copyText('imjustsomeguyy', this)">
-      imjustsomeguyy <span class="copy-msg">Copied!</span>
-    </div>
+</div>
 
-    <div class="social-item" onclick="copyText('somerandomahguy', this)">
-      somerandomahguy <span class="copy-msg">Copied!</span>
-    </div>
-  </div>
+<!-- PANEL -->
+<div id="themePanel" class="theme-panel">
 
-  <!-- ✅ NEW THEME MENU -->
-  <select onchange="setTheme(this.value)">
-    <option value="">Dark (Default)</option>
-    <option value="light">Light</option>
-    <option value="green">Green</option>
-  </select>
+<div class="mode-row">
+<div class="mode-btn active" onclick="setMode('dark', this)">Dark</div>
+<div class="mode-btn" onclick="setMode('light', this)">Light</div>
+</div>
 
-  <img src="methodtriad.png" class="bottom-image" />
+<div class="color-grid">
+<div class="color c-default active" onclick="setColor('default', this)"></div>
+<div class="color c-green" onclick="setColor('green', this)"></div>
+<div class="color c-blue" onclick="setColor('blue', this)"></div>
+<div class="color c-red" onclick="setColor('red', this)"></div>
+<div class="color c-orange" onclick="setColor('orange', this)"></div>
+<div class="color c-purple" onclick="setColor('purple', this)"></div>
+<div class="color c-teal" onclick="setColor('teal', this)"></div>
+</div>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
 <script>
-function copyText(text, el) {
-  navigator.clipboard.writeText(text);
-  const msg = el.querySelector(".copy-msg");
-  msg.style.display = "inline";
-  setTimeout(() => msg.style.display = "none", 1200);
+function generate(){
+  let code = document.getElementById("productCode").value;
+  JsBarcode("#barcode", code, {format:"CODE128"});
 }
 
-function padLeft(str, length) {
-  return str.toString().padStart(length, '0');
+/* panel */
+function togglePanel(){
+  document.getElementById("themePanel").classList.toggle("open");
 }
 
-function calculateCheckDigit(input) {
-  let sum = 0;
-  for (let i = 0; i < input.length; i++) {
-    const digit = parseInt(input[input.length - 1 - i], 10);
-    const weight = (i % 2 === 0) ? 3 : 1;
-    sum += digit * weight;
-  }
-  return (10 - (sum % 10)) % 10;
+/* mode */
+function setMode(mode, el){
+  document.body.classList.remove("light");
+  if(mode === "light") document.body.classList.add("light");
+
+  document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
 }
 
-function generateBarcode() {
-  const productInput = document.getElementById('productCode').value;
-  const priceInput = document.getElementById('price').value;
-  const labelInput = document.getElementById('barcodeLabelInput').value;
+/* color */
+function setColor(color, el){
+  document.body.dataset.color = color;
 
-  if (!productInput || productInput.length < 8) {
-    alert("Enter a valid barcode (at least 8 digits).");
-    return;
-  }
+  document.querySelectorAll(".color").forEach(c=>c.classList.remove("active"));
+  el.classList.add("active");
 
-  document.getElementById("barcodeLabel").innerText = labelInput;
-
-  const numericProduct = productInput.replace(/\D/g, '');
-  let productDigits = numericProduct.length === 14 ? numericProduct.slice(0, -1) : numericProduct;
-  productDigits = padLeft(productDigits, 13);
-
-  const paddedPrice = padLeft(priceInput, 6);
-  const baseNumber = `91${productDigits}${paddedPrice}`;
-  const checkDigit = calculateCheckDigit(baseNumber);
-  const fullBarcode = `${baseNumber}${checkDigit}`;
-
-  JsBarcode("#barcodeCanvas", fullBarcode, {
-    format: "CODE128",
-    displayValue: true,
-    fontSize: 8,
-    width: 2,
-    height: 80,
-    margin: 5
-  });
+  applyTheme();
 }
 
-function setPriceAndGenerate(pence) {
-  document.getElementById('price').value = pence;
-  document.getElementById('customPriceContainer').style.display = 'none';
-  generateBarcode();
-}
+/* apply combined theme */
+function applyTheme(){
+  let color = document.body.dataset.color;
 
-function showCustomPrice() {
-  document.getElementById('customPriceContainer').style.display = 'block';
-}
+  let map = {
+    default:"#222827",
+    green:"#1f3d2b",
+    blue:"#1c2f4a",
+    red:"#4a1c1c",
+    orange:"#4a2f1c",
+    purple:"#2f1c4a",
+    teal:"#1c4a46"
+  };
 
-/* ✅ NEW THEME SWITCHER */
-function setTheme(theme) {
-  document.body.className = theme;
+  document.querySelector(".container").style.background = map[color];
 }
 </script>
 
