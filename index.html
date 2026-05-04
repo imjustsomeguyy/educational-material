@@ -6,158 +6,262 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     /* ══════════════════════════════════════════
-       LOADING SCREEN
+       MATRIX LOADING SCREEN
     ══════════════════════════════════════════ */
-    #loadingScreen {
+    #matrixLoader {
       position: fixed;
       inset: 0;
-      background: #111614;
+      background: #000;
       z-index: 9999;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      transition: opacity 0.8s ease;
+      transition: opacity 1s ease;
     }
-
-    #loadingScreen.fade-out {
+    #matrixLoader.fade-out {
       opacity: 0;
       pointer-events: none;
     }
 
-    .ls-wrap {
+    /* Matrix rain canvas */
+    #matrixCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.18;
+    }
+
+    /* The ghost UI that gets "assembled" */
+    .ml-ghost {
+      position: relative;
+      z-index: 10;
+      width: min(420px, 90vw);
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0;
+    }
+
+    /* Each ghost element starts transparent/outline and fills in */
+    .ml-el {
+      border: 1.5px solid rgba(104,176,106,0);
+      border-radius: 8px;
+      background: transparent;
+      transition: none;
       position: relative;
-    }
-
-    /* Animated barcode bars */
-    .ls-barcode {
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-      height: 70px;
-      margin-bottom: 28px;
-      position: relative;
-    }
-
-    .ls-bar {
-      width: 4px;
-      border-radius: 2px 2px 0 0;
-      background: #68b06a;
-      animation: lsBarPulse 1.4s ease-in-out infinite;
-      transform-origin: bottom;
-    }
-
-    /* Stagger and vary heights */
-    .ls-bar:nth-child(1)  { height: 38px; animation-delay: 0.00s; }
-    .ls-bar:nth-child(2)  { height: 62px; animation-delay: 0.05s; }
-    .ls-bar:nth-child(3)  { height: 45px; animation-delay: 0.10s; }
-    .ls-bar:nth-child(4)  { height: 70px; animation-delay: 0.15s; width: 8px; }
-    .ls-bar:nth-child(5)  { height: 30px; animation-delay: 0.20s; }
-    .ls-bar:nth-child(6)  { height: 55px; animation-delay: 0.25s; }
-    .ls-bar:nth-child(7)  { height: 70px; animation-delay: 0.30s; width: 6px; }
-    .ls-bar:nth-child(8)  { height: 42px; animation-delay: 0.35s; }
-    .ls-bar:nth-child(9)  { height: 65px; animation-delay: 0.40s; }
-    .ls-bar:nth-child(10) { height: 35px; animation-delay: 0.45s; }
-    .ls-bar:nth-child(11) { height: 70px; animation-delay: 0.50s; width: 8px; }
-    .ls-bar:nth-child(12) { height: 48px; animation-delay: 0.55s; }
-    .ls-bar:nth-child(13) { height: 60px; animation-delay: 0.60s; }
-    .ls-bar:nth-child(14) { height: 70px; animation-delay: 0.65s; width: 6px; }
-    .ls-bar:nth-child(15) { height: 40px; animation-delay: 0.70s; }
-    .ls-bar:nth-child(16) { height: 55px; animation-delay: 0.75s; }
-    .ls-bar:nth-child(17) { height: 70px; animation-delay: 0.80s; width: 8px; }
-    .ls-bar:nth-child(18) { height: 33px; animation-delay: 0.85s; }
-    .ls-bar:nth-child(19) { height: 50px; animation-delay: 0.90s; }
-    .ls-bar:nth-child(20) { height: 70px; animation-delay: 0.95s; }
-
-    @keyframes lsBarPulse {
-      0%, 100% { opacity: 0.25; transform: scaleY(0.7); }
-      50%       { opacity: 1;    transform: scaleY(1); }
-    }
-
-    /* Scanning laser */
-    .ls-laser {
-      position: absolute;
-      top: 0;
-      left: -6px;
-      right: -6px;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #68b06a, #a8e0aa, #68b06a, transparent);
-      box-shadow: 0 0 10px #68b06a, 0 0 24px #68b06a88;
-      animation: lsLaser 1.2s ease-in-out infinite;
-    }
-
-    @keyframes lsLaser {
-      0%   { top: 0%;   opacity: 0; }
-      8%   { opacity: 1; }
-      92%  { opacity: 1; }
-      100% { top: 100%; opacity: 0; }
-    }
-
-    .ls-title {
-      font-family: Arial, sans-serif;
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #dfeee0;
-      letter-spacing: 0.08em;
-      animation: lsFadeUp 0.7s ease forwards;
-      opacity: 0;
-      animation-delay: 0.3s;
-    }
-
-    .ls-sub {
-      font-family: Arial, sans-serif;
-      font-size: 0.75rem;
-      color: #4a6050;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      margin-top: 4px;
-      animation: lsFadeUp 0.7s ease forwards;
-      opacity: 0;
-      animation-delay: 0.55s;
-    }
-
-    @keyframes lsFadeUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Progress bar */
-    .ls-progress-track {
-      width: 160px;
-      height: 3px;
-      background: rgba(104,176,106,0.15);
-      border-radius: 2px;
-      margin-top: 28px;
       overflow: hidden;
     }
 
-    .ls-progress-fill {
+    /* Scan line that sweeps across each element as it "builds" */
+    .ml-el::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(104,176,106,0.12) 45%, rgba(104,176,106,0.22) 50%, rgba(104,176,106,0.12) 55%, transparent 100%);
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .ml-el.sweep::after {
+      animation: mlSweep 0.55s ease forwards;
+    }
+    @keyframes mlSweep {
+      0%   { transform: translateY(-100%); opacity: 1; }
+      100% { transform: translateY(100%);  opacity: 0; }
+    }
+
+    /* Outline phase — border glows in */
+    .ml-el.phase-outline {
+      border-color: rgba(104,176,106,0.7);
+      box-shadow: 0 0 8px rgba(104,176,106,0.3), inset 0 0 16px rgba(104,176,106,0.04);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Fill phase — background materialises */
+    .ml-el.phase-fill {
+      background: rgba(104,176,106,0.07);
+      transition: background 0.4s ease;
+    }
+
+    /* Solid phase — becomes the real element colour */
+    .ml-el.phase-solid {
+      border-color: rgba(104,176,106,0.25);
+      box-shadow: none;
+      transition: background 0.5s ease, border-color 0.5s ease;
+    }
+
+    /* Ghost logo bar */
+    .ml-logo-bar {
+      width: 200px;
+      height: 48px;
+      margin-bottom: 18px;
+      border-radius: 10px;
+    }
+
+    /* Ghost input */
+    .ml-input-row {
+      width: 100%;
+      height: 40px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
+    /* Ghost label input */
+    .ml-label-input {
+      width: 85%;
+      height: 36px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
+    /* Ghost buttons row */
+    .ml-btn-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      width: 100%;
+      justify-content: center;
+    }
+    .ml-btn {
+      width: 52px;
+      height: 32px;
+      border-radius: 6px;
+    }
+
+    /* Ghost barcode frame */
+    .ml-barcode-frame {
+      width: 100%;
+      height: 130px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* Barcode lines inside ghost frame */
+    .ml-barcode-lines {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .ml-barcode-lines.visible { opacity: 1; }
+    .ml-bline {
+      width: 2px;
+      background: rgba(104,176,106,0.6);
+      border-radius: 1px;
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+    .ml-bline.grow {
+      animation: mlBarGrow 0.4s ease forwards;
+    }
+    @keyframes mlBarGrow {
+      from { transform: scaleY(0); opacity: 0; }
+      to   { transform: scaleY(1); opacity: 1; }
+    }
+
+    /* Ghost socials row */
+    .ml-socials {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+      justify-content: center;
+    }
+    .ml-social {
+      width: 140px;
+      height: 36px;
+      border-radius: 8px;
+    }
+
+    /* Ghost bottom row */
+    .ml-bottom {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      width: 100%;
+      justify-content: center;
+    }
+    .ml-theme-btn {
+      width: 90px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    .ml-logo-small {
+      width: 48px;
+      height: 30px;
+      border-radius: 6px;
+    }
+
+    /* Text that types in */
+    .ml-typed-text {
+      font-family: 'Courier New', monospace;
+      font-size: 0.72rem;
+      color: rgba(104,176,106,0.8);
+      letter-spacing: 0.05em;
+      text-align: center;
+      min-height: 1.1em;
+      white-space: nowrap;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    /* Status line at bottom */
+    .ml-status {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Courier New', monospace;
+      font-size: 0.65rem;
+      color: rgba(104,176,106,0.55);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      animation: mlStatusBlink 1.2s ease-in-out infinite;
+    }
+    @keyframes mlStatusBlink {
+      0%,100% { opacity: 0.4; }
+      50%      { opacity: 1; }
+    }
+
+    /* Progress bar */
+    .ml-progress-wrap {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 2px;
+      background: rgba(104,176,106,0.12);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .ml-progress-fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #68b06a, #a8d8aa);
+      background: #68b06a;
       border-radius: 2px;
-      transition: width 0.1s linear;
-      box-shadow: 0 0 6px #68b06a66;
+      box-shadow: 0 0 6px #68b06a;
+      transition: width 0.12s linear;
     }
 
-    .ls-tap {
-      font-family: Arial, sans-serif;
-      font-size: 0.65rem;
-      color: #3a5040;
-      margin-top: 14px;
-      letter-spacing: 0.12em;
-      animation: lsBlink 2s ease-in-out infinite;
-      animation-delay: 1.5s;
-      opacity: 0;
-    }
-
-    @keyframes lsBlink {
-      0%, 100% { opacity: 0; }
-      50%       { opacity: 1; }
+    /* Percentage counter */
+    .ml-pct {
+      position: absolute;
+      bottom: 44px;
+      right: 28px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.6rem;
+      color: rgba(104,176,106,0.4);
+      letter-spacing: 0.05em;
     }
 
     /* ══════════════════════════════════════════
@@ -216,7 +320,6 @@
     }
     button.price-button:hover { background: var(--accent-hover); }
 
-    /* Input row */
     .input-row { display: flex; align-items: center; gap: 0.4rem; margin: 0.5rem 0; }
     .input-row input[type="text"] { flex: 1; margin: 0; width: 0; }
 
@@ -229,7 +332,6 @@
     }
     .scan-btn:hover { background: var(--accent-hover); transform: scale(1.05); }
 
-    /* Barcode frame */
     .barcode-frame {
       background: var(--barcode-bg); padding: 1rem;
       border-radius: 0.8rem; margin-top: 1rem; transition: background 0.4s;
@@ -239,13 +341,11 @@
     canvas { max-width: 100%; }
     .watermark { color: var(--text-sub); margin-top: 0.5rem; font-size: 0.72rem; line-height: 1.55; }
 
-    /* Socials */
     .socials { margin-top: 1rem; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
     .social-item { background: var(--social-bg); padding: 0.5rem 0.8rem; border-radius: 0.6rem; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; transition: background 0.2s; }
     .social-item:hover { background: var(--social-hover); }
     .copy-msg { font-size: 0.7rem; color: var(--accent); display: none; }
 
-    /* Bottom row */
     .bottom-row { margin-top: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 1rem; }
     .themes-btn { background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 0.6rem; padding: 0.5rem 1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; margin: 0; transition: background 0.2s, transform 0.15s; }
     .themes-btn:hover { background: var(--social-hover); transform: scale(1.03); }
@@ -331,25 +431,17 @@
     .scanner-close { background: none; border: none; color: var(--text-sub); font-size: 1.3rem; cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 0.4rem; transition: color 0.2s, background 0.2s; line-height: 1; margin: 0; }
     .scanner-close:hover { color: var(--text); background: rgba(128,128,128,0.12); }
 
-    /* Quagga renders video+canvas inside this div */
     #scannerTarget {
       position: relative; width: 100%;
       border-radius: 0.9rem; overflow: hidden;
       background: #000; aspect-ratio: 4/3;
     }
-
-    /* Style the video Quagga injects */
     #scannerTarget video {
       width: 100% !important; height: 100% !important;
       object-fit: cover; display: block;
     }
+    #scannerTarget canvas.drawingBuffer { display: none; }
 
-    /* Hide the Quagga debug canvas but keep the drawingBuffer canvas */
-    #scannerTarget canvas.drawingBuffer {
-      display: none;
-    }
-
-    /* Corner guides */
     .scan-guide {
       position: absolute; inset: 10%;
       pointer-events: none; z-index: 2;
@@ -365,7 +457,6 @@
     .scan-guide-inner::before { bottom: 0; left: 0;   border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
     .scan-guide-inner::after  { bottom: 0; right: 0;  border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
 
-    /* Animated scan laser */
     .scan-line {
       position: absolute; left: 8%; width: 84%; height: 2px;
       background: linear-gradient(90deg, transparent, var(--accent), transparent);
@@ -408,60 +499,179 @@
     .theme-swatch-left  { left: 0; }
     .theme-swatch-right { right: 0; }
 
-    [data-theme="forest"]   { background:#1e2922; } [data-theme="forest"]   .theme-swatch-left{background:#1a1f1c;} [data-theme="forest"]   .theme-swatch-right{background:#68b06a;}
-    [data-theme="ocean"]    { background:#111a28; } [data-theme="ocean"]    .theme-swatch-left{background:#0d1520;} [data-theme="ocean"]    .theme-swatch-right{background:#3a8eff;}
-    [data-theme="violet"]   { background:#1c1428; } [data-theme="violet"]   .theme-swatch-left{background:#130e1f;} [data-theme="violet"]   .theme-swatch-right{background:#a066e8;}
-    [data-theme="ember"]    { background:#251410; } [data-theme="ember"]    .theme-swatch-left{background:#1c0e0a;} [data-theme="ember"]    .theme-swatch-right{background:#e8572a;}
-    [data-theme="arctic"]   { background:#0d1e22; } [data-theme="arctic"]   .theme-swatch-left{background:#091518;} [data-theme="arctic"]   .theme-swatch-right{background:#00c4b4;}
-    [data-theme="obsidian"] { background:#1a1c20; } [data-theme="obsidian"] .theme-swatch-left{background:#141618;} [data-theme="obsidian"] .theme-swatch-right{background:#a0aec0;}
-    [data-theme="mint"]     { background:#e8f5ea; } [data-theme="mint"]     .theme-swatch-left{background:#f3faf4;} [data-theme="mint"]     .theme-swatch-right{background:#2e9e58;}
-    [data-theme="golden"]   { background:#fdf3e3; } [data-theme="golden"]   .theme-swatch-left{background:#fffaf2;} [data-theme="golden"]   .theme-swatch-right{background:#d97a18;}
-    [data-theme="cherry"]   { background:#fce8ef; } [data-theme="cherry"]   .theme-swatch-left{background:#fff0f5;} [data-theme="cherry"]   .theme-swatch-right{background:#e0436a;}
-    [data-theme="lavender"] { background:#f0ecfc; } [data-theme="lavender"] .theme-swatch-left{background:#f8f5ff;} [data-theme="lavender"] .theme-swatch-right{background:#7c4ddb;}
-    [data-theme="peach"]    { background:#fef0e8; } [data-theme="peach"]    .theme-swatch-left{background:#fff7f2;} [data-theme="peach"]    .theme-swatch-right{background:#e8733a;}
-    [data-theme="sky"]      { background:#e8f4fc; } [data-theme="sky"]      .theme-swatch-left{background:#f0f8ff;} [data-theme="sky"]      .theme-swatch-right{background:#1a90d4;}
+    [data-theme="forest"]    { background:#1e2922; } [data-theme="forest"]    .theme-swatch-left{background:#1a1f1c;} [data-theme="forest"]    .theme-swatch-right{background:#68b06a;}
+    [data-theme="ocean"]     { background:#111a28; } [data-theme="ocean"]     .theme-swatch-left{background:#0d1520;} [data-theme="ocean"]     .theme-swatch-right{background:#3a8eff;}
+    [data-theme="violet"]    { background:#1c1428; } [data-theme="violet"]    .theme-swatch-left{background:#130e1f;} [data-theme="violet"]    .theme-swatch-right{background:#a066e8;}
+    [data-theme="ember"]     { background:#251410; } [data-theme="ember"]     .theme-swatch-left{background:#1c0e0a;} [data-theme="ember"]     .theme-swatch-right{background:#e8572a;}
+    [data-theme="arctic"]    { background:#0d1e22; } [data-theme="arctic"]    .theme-swatch-left{background:#091518;} [data-theme="arctic"]    .theme-swatch-right{background:#00c4b4;}
+    [data-theme="obsidian"]  { background:#1a1c20; } [data-theme="obsidian"]  .theme-swatch-left{background:#141618;} [data-theme="obsidian"]  .theme-swatch-right{background:#a0aec0;}
+    [data-theme="mint"]      { background:#e8f5ea; } [data-theme="mint"]      .theme-swatch-left{background:#f3faf4;} [data-theme="mint"]      .theme-swatch-right{background:#2e9e58;}
+    [data-theme="golden"]    { background:#fdf3e3; } [data-theme="golden"]    .theme-swatch-left{background:#fffaf2;} [data-theme="golden"]    .theme-swatch-right{background:#d97a18;}
+    [data-theme="cherry"]    { background:#fce8ef; } [data-theme="cherry"]    .theme-swatch-left{background:#fff0f5;} [data-theme="cherry"]    .theme-swatch-right{background:#e0436a;}
+    [data-theme="lavender"]  { background:#f0ecfc; } [data-theme="lavender"]  .theme-swatch-left{background:#f8f5ff;} [data-theme="lavender"]  .theme-swatch-right{background:#7c4ddb;}
+    [data-theme="peach"]     { background:#fef0e8; } [data-theme="peach"]     .theme-swatch-left{background:#fff7f2;} [data-theme="peach"]     .theme-swatch-right{background:#e8733a;}
+    [data-theme="sky"]       { background:#e8f4fc; } [data-theme="sky"]       .theme-swatch-left{background:#f0f8ff;} [data-theme="sky"]       .theme-swatch-right{background:#1a90d4;}
+    /* Blueprint swatch */
+    [data-theme="blueprint"] { background:#f0f0f0; } [data-theme="blueprint"] .theme-swatch-left{background:#ffffff;} [data-theme="blueprint"] .theme-swatch-right{background:#111111;}
 
-    body.theme-forest   { --bg:#1a1f1c; --card:#222827; --text:#dfeee0; --text-sub:#6b7c6e; --accent:#68b06a; --accent-hover:#4f9a52; --btn-bg:#2a2f2d; --btn-border:#555; --barcode-bg:#e6efe7; --barcode-text:#1f2b21; --social-bg:#2a2f2d; --social-hover:#3a413f; --logo-filter:brightness(1.15) saturate(1.2); }
-    body.theme-ocean    { --bg:#0d1520; --card:#111e30; --text:#c8ddfa; --text-sub:#4a6080; --accent:#3a8eff; --accent-hover:#1a70f0; --btn-bg:#162035; --btn-border:#2a4060; --barcode-bg:#ddeeff; --barcode-text:#061428; --social-bg:#162035; --social-hover:#1e2e48; --logo-filter:brightness(1.2) hue-rotate(160deg) saturate(1.8); }
-    body.theme-violet   { --bg:#130e1f; --card:#1c1428; --text:#e0d4f8; --text-sub:#6a5080; --accent:#a066e8; --accent-hover:#8244d4; --btn-bg:#261b3a; --btn-border:#4a3060; --barcode-bg:#f0e8ff; --barcode-text:#1a0a30; --social-bg:#261b3a; --social-hover:#32244e; --logo-filter:brightness(1.2) hue-rotate(260deg) saturate(2); }
-    body.theme-ember    { --bg:#1c0e0a; --card:#251410; --text:#f8d4c0; --text-sub:#8a5040; --accent:#e8572a; --accent-hover:#c83c14; --btn-bg:#351810; --btn-border:#6a3020; --barcode-bg:#ffe8d8; --barcode-text:#2a0e04; --social-bg:#351810; --social-hover:#46221a; --logo-filter:brightness(1.2) hue-rotate(100deg) saturate(2.2); }
-    body.theme-arctic   { --bg:#091518; --card:#0d1e22; --text:#b8eee8; --text-sub:#3a7068; --accent:#00c4b4; --accent-hover:#00a898; --btn-bg:#102428; --btn-border:#1e4848; --barcode-bg:#d4f8f4; --barcode-text:#041414; --social-bg:#102428; --social-hover:#163438; --logo-filter:brightness(1.2) hue-rotate(140deg) saturate(2); }
-    body.theme-obsidian { --bg:#141618; --card:#1a1c20; --text:#d0d8e4; --text-sub:#505868; --accent:#a0aec0; --accent-hover:#8090a8; --btn-bg:#242830; --btn-border:#404858; --barcode-bg:#e8ecf4; --barcode-text:#101418; --social-bg:#242830; --social-hover:#303840; --logo-filter:brightness(1.05) saturate(0.25) contrast(1.15); }
-    body.theme-mint     { --bg:#f3faf4; --card:#ffffff; --text:#1f2b21; --text-sub:#6a8a6e; --accent:#2e9e58; --accent-hover:#227840; --btn-bg:#e4f4e6; --btn-border:#b0d8b8; --barcode-bg:#d4eeda; --barcode-text:#0e2018; --social-bg:#e4f4e6; --social-hover:#cfebd4; --logo-filter:brightness(0.22) saturate(1.6); }
-    body.theme-golden   { --bg:#fffaf2; --card:#ffffff; --text:#3a2000; --text-sub:#9a7040; --accent:#d97a18; --accent-hover:#b86010; --btn-bg:#faeede; --btn-border:#e8c898; --barcode-bg:#fde8c8; --barcode-text:#2a1400; --social-bg:#faeede; --social-hover:#f5e0c0; --logo-filter:brightness(0.18) sepia(0.8) saturate(3) hue-rotate(20deg); }
-    body.theme-cherry   { --bg:#fff0f5; --card:#ffffff; --text:#4a0020; --text-sub:#9a6070; --accent:#e0436a; --accent-hover:#c82850; --btn-bg:#fce8ef; --btn-border:#f0b0c8; --barcode-bg:#ffd8e8; --barcode-text:#3a001a; --social-bg:#fce8ef; --social-hover:#f8d0e0; --logo-filter:brightness(0.18) sepia(1) saturate(6) hue-rotate(300deg); }
-    body.theme-lavender { --bg:#f8f5ff; --card:#ffffff; --text:#2a1a50; --text-sub:#7a68a0; --accent:#7c4ddb; --accent-hover:#6038c0; --btn-bg:#ede8fc; --btn-border:#c8b8f0; --barcode-bg:#e8e0ff; --barcode-text:#18083a; --social-bg:#ede8fc; --social-hover:#e0d8f8; --logo-filter:brightness(0.2) sepia(1) saturate(5) hue-rotate(240deg); }
-    body.theme-peach    { --bg:#fff7f2; --card:#ffffff; --text:#3a1800; --text-sub:#a06040; --accent:#e8733a; --accent-hover:#cc5820; --btn-bg:#faeade; --btn-border:#f0c0a0; --barcode-bg:#fde0c8; --barcode-text:#2a0e00; --social-bg:#faeade; --social-hover:#f5d8c0; --logo-filter:brightness(0.18) sepia(1) saturate(4) hue-rotate(60deg); }
-    body.theme-sky      { --bg:#f0f8ff; --card:#ffffff; --text:#0a1e38; --text-sub:#5880a8; --accent:#1a90d4; --accent-hover:#0070b8; --btn-bg:#e0f0fc; --btn-border:#a8d0ee; --barcode-bg:#d0e8f8; --barcode-text:#041428; --social-bg:#e0f0fc; --social-hover:#cce4f5; --logo-filter:brightness(0.2) saturate(1.8) hue-rotate(160deg); }
+    body.theme-forest    { --bg:#1a1f1c; --card:#222827; --text:#dfeee0; --text-sub:#6b7c6e; --accent:#68b06a; --accent-hover:#4f9a52; --btn-bg:#2a2f2d; --btn-border:#555; --barcode-bg:#e6efe7; --barcode-text:#1f2b21; --social-bg:#2a2f2d; --social-hover:#3a413f; --logo-filter:brightness(1.15) saturate(1.2); }
+    body.theme-ocean     { --bg:#0d1520; --card:#111e30; --text:#c8ddfa; --text-sub:#4a6080; --accent:#3a8eff; --accent-hover:#1a70f0; --btn-bg:#162035; --btn-border:#2a4060; --barcode-bg:#ddeeff; --barcode-text:#061428; --social-bg:#162035; --social-hover:#1e2e48; --logo-filter:brightness(1.2) hue-rotate(160deg) saturate(1.8); }
+    body.theme-violet    { --bg:#130e1f; --card:#1c1428; --text:#e0d4f8; --text-sub:#6a5080; --accent:#a066e8; --accent-hover:#8244d4; --btn-bg:#261b3a; --btn-border:#4a3060; --barcode-bg:#f0e8ff; --barcode-text:#1a0a30; --social-bg:#261b3a; --social-hover:#32244e; --logo-filter:brightness(1.2) hue-rotate(260deg) saturate(2); }
+    body.theme-ember     { --bg:#1c0e0a; --card:#251410; --text:#f8d4c0; --text-sub:#8a5040; --accent:#e8572a; --accent-hover:#c83c14; --btn-bg:#351810; --btn-border:#6a3020; --barcode-bg:#ffe8d8; --barcode-text:#2a0e04; --social-bg:#351810; --social-hover:#46221a; --logo-filter:brightness(1.2) hue-rotate(100deg) saturate(2.2); }
+    body.theme-arctic    { --bg:#091518; --card:#0d1e22; --text:#b8eee8; --text-sub:#3a7068; --accent:#00c4b4; --accent-hover:#00a898; --btn-bg:#102428; --btn-border:#1e4848; --barcode-bg:#d4f8f4; --barcode-text:#041414; --social-bg:#102428; --social-hover:#163438; --logo-filter:brightness(1.2) hue-rotate(140deg) saturate(2); }
+    body.theme-obsidian  { --bg:#141618; --card:#1a1c20; --text:#d0d8e4; --text-sub:#505868; --accent:#a0aec0; --accent-hover:#8090a8; --btn-bg:#242830; --btn-border:#404858; --barcode-bg:#e8ecf4; --barcode-text:#101418; --social-bg:#242830; --social-hover:#303840; --logo-filter:brightness(1.05) saturate(0.25) contrast(1.15); }
+    body.theme-mint      { --bg:#f3faf4; --card:#ffffff; --text:#1f2b21; --text-sub:#6a8a6e; --accent:#2e9e58; --accent-hover:#227840; --btn-bg:#e4f4e6; --btn-border:#b0d8b8; --barcode-bg:#d4eeda; --barcode-text:#0e2018; --social-bg:#e4f4e6; --social-hover:#cfebd4; --logo-filter:brightness(0.22) saturate(1.6); }
+    body.theme-golden    { --bg:#fffaf2; --card:#ffffff; --text:#3a2000; --text-sub:#9a7040; --accent:#d97a18; --accent-hover:#b86010; --btn-bg:#faeede; --btn-border:#e8c898; --barcode-bg:#fde8c8; --barcode-text:#2a1400; --social-bg:#faeede; --social-hover:#f5e0c0; --logo-filter:brightness(0.18) sepia(0.8) saturate(3) hue-rotate(20deg); }
+    body.theme-cherry    { --bg:#fff0f5; --card:#ffffff; --text:#4a0020; --text-sub:#9a6070; --accent:#e0436a; --accent-hover:#c82850; --btn-bg:#fce8ef; --btn-border:#f0b0c8; --barcode-bg:#ffd8e8; --barcode-text:#3a001a; --social-bg:#fce8ef; --social-hover:#f8d0e0; --logo-filter:brightness(0.18) sepia(1) saturate(6) hue-rotate(300deg); }
+    body.theme-lavender  { --bg:#f8f5ff; --card:#ffffff; --text:#2a1a50; --text-sub:#7a68a0; --accent:#7c4ddb; --accent-hover:#6038c0; --btn-bg:#ede8fc; --btn-border:#c8b8f0; --barcode-bg:#e8e0ff; --barcode-text:#18083a; --social-bg:#ede8fc; --social-hover:#e0d8f8; --logo-filter:brightness(0.2) sepia(1) saturate(5) hue-rotate(240deg); }
+    body.theme-peach     { --bg:#fff7f2; --card:#ffffff; --text:#3a1800; --text-sub:#a06040; --accent:#e8733a; --accent-hover:#cc5820; --btn-bg:#faeade; --btn-border:#f0c0a0; --barcode-bg:#fde0c8; --barcode-text:#2a0e00; --social-bg:#faeade; --social-hover:#f5d8c0; --logo-filter:brightness(0.18) sepia(1) saturate(4) hue-rotate(60deg); }
+    body.theme-sky       { --bg:#f0f8ff; --card:#ffffff; --text:#0a1e38; --text-sub:#5880a8; --accent:#1a90d4; --accent-hover:#0070b8; --btn-bg:#e0f0fc; --btn-border:#a8d0ee; --barcode-bg:#d0e8f8; --barcode-text:#041428; --social-bg:#e0f0fc; --social-hover:#cce4f5; --logo-filter:brightness(0.2) saturate(1.8) hue-rotate(160deg); }
+
+    /* ── BLUEPRINT THEME ──────────────────────────────
+       White background, black outlines, crude/raw feel
+       Monospace font on labels, no fills — just borders
+    ─────────────────────────────────────────────────── */
+    body.theme-blueprint {
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: #111111;
+      --text-sub: #666666;
+      --accent: #111111;
+      --accent-hover: #333333;
+      --btn-bg: #ffffff;
+      --btn-border: #111111;
+      --barcode-bg: #f0f0f0;
+      --barcode-text: #111111;
+      --social-bg: #ffffff;
+      --social-hover: #eeeeee;
+      --logo-filter: brightness(0) saturate(0);
+      font-family: 'Courier New', monospace;
+    }
+
+    body.theme-blueprint .container {
+      border: 2px solid #111;
+      border-radius: 0;
+      box-shadow: 4px 4px 0 #111;
+    }
+    body.theme-blueprint input[type="text"],
+    body.theme-blueprint input[type="number"] {
+      border: 1.5px solid #111;
+      border-radius: 0;
+      background: #fff;
+      font-family: 'Courier New', monospace;
+    }
+    body.theme-blueprint button.price-button {
+      background: #fff;
+      color: #111;
+      border: 1.5px solid #111;
+      border-radius: 0;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+    }
+    body.theme-blueprint button.price-button:hover {
+      background: #111;
+      color: #fff;
+    }
+    body.theme-blueprint .scan-btn {
+      background: #fff;
+      color: #111;
+      border: 1.5px solid #111;
+      border-radius: 0;
+    }
+    body.theme-blueprint .scan-btn:hover {
+      background: #111;
+      color: #fff;
+    }
+    body.theme-blueprint .barcode-frame {
+      border: 2px solid #111;
+      border-radius: 0;
+      background: #fff;
+    }
+    body.theme-blueprint .social-item {
+      border: 1.5px solid #111;
+      border-radius: 0;
+      font-family: 'Courier New', monospace;
+    }
+    body.theme-blueprint .themes-btn {
+      border: 1.5px solid #111;
+      border-radius: 0;
+      font-family: 'Courier New', monospace;
+    }
+    body.theme-blueprint .debug-btn { color: #555; }
+    body.theme-blueprint .debug-panel {
+      border: 2px solid #111;
+      border-radius: 0;
+      box-shadow: 3px 3px 0 #111;
+    }
+    body.theme-blueprint .debug-override-btn { border-radius: 0; }
+    body.theme-blueprint .debug-reload-btn { border-radius: 0; }
+    body.theme-blueprint .watermark {
+      font-family: 'Courier New', monospace;
+      font-size: 0.65rem;
+      border-top: 1px dashed #aaa;
+      padding-top: 6px;
+      margin-top: 6px;
+    }
 
     body.theme-mint input, body.theme-golden input, body.theme-cherry input,
     body.theme-lavender input, body.theme-peach input, body.theme-sky input { color: var(--text); }
+    body.theme-blueprint input { color: var(--text); }
   </style>
 </head>
 <body class="theme-forest">
 
 <!-- ══════════════════════════════════════════
-     LOADING SCREEN
+     MATRIX LOADING SCREEN
 ══════════════════════════════════════════ -->
-<div id="loadingScreen" onclick="skipLoader()">
-  <div class="ls-wrap">
-    <div class="ls-barcode">
-      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
-      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
-      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
-      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
-      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
-      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
-      <div class="ls-bar"></div><div class="ls-bar"></div>
-      <div class="ls-laser"></div>
+<div id="matrixLoader" onclick="skipMatrixLoader()">
+  <canvas id="matrixCanvas"></canvas>
+
+  <div class="ml-ghost" id="mlGhost">
+    <!-- Logo area -->
+    <div class="ml-el ml-logo-bar" id="mlLogo"></div>
+
+    <!-- Typed text -->
+    <div class="ml-typed-text" id="mlTyped">&nbsp;</div>
+
+    <!-- Input row -->
+    <div class="ml-el ml-input-row" id="mlInput" style="width:100%;"></div>
+
+    <!-- Label input -->
+    <div class="ml-el ml-label-input" id="mlLabel"></div>
+
+    <!-- Button row -->
+    <div class="ml-btn-row">
+      <div class="ml-el ml-btn" id="mlBtn1"></div>
+      <div class="ml-el ml-btn" id="mlBtn2"></div>
+      <div class="ml-el ml-btn" id="mlBtn3"></div>
+      <div class="ml-el ml-btn" id="mlBtn4"></div>
     </div>
-    <div class="ls-title">EasyP55</div>
-    <div class="ls-sub">Barcode Generator</div>
-    <div class="ls-progress-track">
-      <div class="ls-progress-fill" id="lsBar"></div>
+
+    <!-- Barcode frame -->
+    <div class="ml-el ml-barcode-frame" id="mlBarcodeFrame">
+      <div class="ml-barcode-lines" id="mlBcLines">
+        <!-- JS fills these in -->
+      </div>
     </div>
-    <div class="ls-tap">tap to skip</div>
+
+    <!-- Socials -->
+    <div class="ml-socials">
+      <div class="ml-el ml-social" id="mlSoc1"></div>
+      <div class="ml-el ml-social" id="mlSoc2"></div>
+    </div>
+
+    <!-- Bottom -->
+    <div class="ml-bottom">
+      <div class="ml-el ml-theme-btn" id="mlThemeBtn"></div>
+      <div class="ml-el ml-logo-small" id="mlLogoSm"></div>
+    </div>
   </div>
+
+  <div class="ml-pct" id="mlPct">0%</div>
+  <div class="ml-progress-wrap">
+    <div class="ml-progress-fill" id="mlBar"></div>
+  </div>
+  <div class="ml-status" id="mlStatus">INITIALIZING...</div>
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -524,6 +734,10 @@
     <div class="theme-card" data-theme="peach"    onclick="applyTheme('peach',this)"><div class="theme-swatch"><div class="theme-swatch-half theme-swatch-left"></div><div class="theme-swatch-half theme-swatch-right"></div></div></div>
     <div class="theme-card" data-theme="sky"      onclick="applyTheme('sky',this)"><div class="theme-swatch"><div class="theme-swatch-half theme-swatch-left"></div><div class="theme-swatch-half theme-swatch-right"></div></div></div>
   </div>
+  <div class="theme-section-label">Special</div>
+  <div class="theme-grid" style="grid-template-columns: repeat(6,1fr);">
+    <div class="theme-card" data-theme="blueprint" onclick="applyTheme('blueprint',this)"><div class="theme-swatch"><div class="theme-swatch-half theme-swatch-left"></div><div class="theme-swatch-half theme-swatch-right"></div></div></div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -547,7 +761,7 @@
       <button class="debug-override-btn" id="ovr-android" onclick="setOverride('android')">Android</button>
       <button class="debug-override-btn" id="ovr-desktop" onclick="setOverride('desktop')">Desktop</button>
     </div>
-    <button class="debug-reload-btn" onclick="replayLoader()">
+    <button class="debug-reload-btn" onclick="replayMatrixLoader()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
       </svg>
@@ -612,62 +826,251 @@
   </div>
 </div>
 
-<!-- Quagga2 — far better EAN/UPC detection than ZXing for real-world barcodes -->
 <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
 <script>
 /* ══════════════════════════════════════════════════════
-   LOADING SCREEN
+   MATRIX RAIN
 ══════════════════════════════════════════════════════ */
-const LOADER_DURATION = 5000; // ms
-let loaderTimer = null;
-let loaderInterval = null;
-let loaderDone = false;
+(function() {
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx    = canvas.getContext('2d');
+  const GREEN  = '#68b06a';
+  let cols, drops, animId;
 
-function startLoader() {
-  const screen   = document.getElementById('loadingScreen');
-  const bar      = document.getElementById('lsBar');
-  loaderDone     = false;
-  screen.style.display  = 'flex';
-  screen.style.opacity  = '1';
-  screen.classList.remove('fade-out');
-  bar.style.width       = '0%';
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const fontSize = 13;
+    cols  = Math.floor(canvas.width / fontSize);
+    drops = Array.from({ length: cols }, () => Math.random() * -canvas.height / fontSize);
+  }
 
-  const startTime = Date.now();
+  function drawRain() {
+    ctx.fillStyle = 'rgba(0,0,0,0.055)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font      = '13px Courier New';
+    for (let i = 0; i < drops.length; i++) {
+      // Mix of katakana-range and binary for effect
+      const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモ';
+      const ch    = chars[Math.floor(Math.random() * chars.length)];
+      const bright = Math.random() > 0.92;
+      ctx.fillStyle = bright ? '#ccffcc' : GREEN;
+      ctx.fillText(ch, i * 13, drops[i] * 13);
+      if (drops[i] * 13 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i] += 0.6 + Math.random() * 0.3;
+    }
+    animId = requestAnimationFrame(drawRain);
+  }
 
-  clearInterval(loaderInterval);
-  loaderInterval = setInterval(() => {
-    const pct = Math.min(100, ((Date.now() - startTime) / LOADER_DURATION) * 100);
-    bar.style.width = pct + '%';
-    if (pct >= 100) finishLoader();
-  }, 40);
+  window._matrixRainStart = function() {
+    resize();
+    window.addEventListener('resize', resize);
+    drawRain();
+  };
+  window._matrixRainStop = function() {
+    cancelAnimationFrame(animId);
+    window.removeEventListener('resize', resize);
+  };
+})();
+
+/* ══════════════════════════════════════════════════════
+   MATRIX LOADER SEQUENCE
+══════════════════════════════════════════════════════ */
+let mlDone      = false;
+let mlSkipped   = false;
+let mlTimers    = [];
+
+const STATUSES = [
+  'INITIALIZING...',
+  'LOADING MODULES...',
+  'MAPPING ELEMENTS...',
+  'RENDERING INTERFACE...',
+  'BUILDING COMPONENTS...',
+  'COMPILING BARCODE ENGINE...',
+  'SCANNING ENVIRONMENT...',
+  'APPLYING THEME DATA...',
+  'FINALIZING...',
+  'READY',
+];
+
+function mlT(fn, delay) {
+  const id = setTimeout(fn, delay);
+  mlTimers.push(id);
+  return id;
 }
 
-function finishLoader() {
-  if (loaderDone) return;
-  loaderDone = true;
-  clearInterval(loaderInterval);
-  document.getElementById('lsBar').style.width = '100%';
-  setTimeout(() => {
-    const screen = document.getElementById('loadingScreen');
-    screen.classList.add('fade-out');
-    setTimeout(() => { screen.style.display = 'none'; }, 800);
-  }, 200);
+function buildBarcodeLinesEl() {
+  const wrap = document.getElementById('mlBcLines');
+  wrap.innerHTML = '';
+  const heights = [50,80,40,70,55,90,45,80,60,70,35,85,50,75,65,90,40,80,55,70,45,85,60,75,50,90,40,70,55,80];
+  heights.forEach((h, i) => {
+    const d = document.createElement('div');
+    d.className = 'ml-bline';
+    d.style.height = h + 'px';
+    d.style.animationDelay = (i * 18) + 'ms';
+    wrap.appendChild(d);
+  });
 }
 
-function skipLoader() {
-  clearInterval(loaderInterval);
-  finishLoader();
+function phaseEl(id, phases, delay) {
+  /* phases: array of {phase, after} objects */
+  const el = document.getElementById(id);
+  if (!el) return;
+  phases.forEach(({ phase, after }) => {
+    mlT(() => {
+      if (mlSkipped) return;
+      el.classList.add('phase-' + phase);
+      el.classList.add('sweep');
+      setTimeout(() => el.classList.remove('sweep'), 700);
+    }, delay + after);
+  });
 }
 
-function replayLoader() {
+function typeStatus(text) {
+  const el = document.getElementById('mlStatus');
+  if (!el) return;
+  el.textContent = text;
+}
+
+function typeText(text, done) {
+  const el = document.getElementById('mlTyped');
+  if (!el) return;
+  el.textContent = '';
+  let i = 0;
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789></-_';
+  function tick() {
+    if (i >= text.length) { done && done(); return; }
+    // scramble then settle
+    const real = text.slice(0, i);
+    const fake = chars[Math.floor(Math.random() * chars.length)];
+    el.textContent = real + fake;
+    i++;
+    setTimeout(tick, 28 + Math.random() * 20);
+  }
+  tick();
+}
+
+function updateProgress(pct) {
+  const bar  = document.getElementById('mlBar');
+  const pctEl = document.getElementById('mlPct');
+  if (bar)   bar.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = Math.round(pct) + '%';
+}
+
+function startMatrixLoader() {
+  mlDone    = false;
+  mlSkipped = false;
+  mlTimers  = [];
+  const loader = document.getElementById('matrixLoader');
+  loader.style.display = 'flex';
+  loader.style.opacity = '1';
+  loader.classList.remove('fade-out');
+
+  buildBarcodeLinesEl();
+  window._matrixRainStart();
+
+  /* ── Timeline ── */
+  // Progress ticks
+  const TOTAL = 7200;
+  let progStart = Date.now();
+  function tickProgress() {
+    if (mlSkipped) return;
+    const pct = Math.min(99, ((Date.now() - progStart) / TOTAL) * 100);
+    updateProgress(pct);
+    if (pct < 99) requestAnimationFrame(tickProgress);
+  }
+  requestAnimationFrame(tickProgress);
+
+  // Status cycling
+  STATUSES.forEach((s, i) => {
+    mlT(() => { if (!mlSkipped) typeStatus(s); }, i * 750);
+  });
+
+  // Element build sequence
+  const seq = [
+    // [id, outline_delay, fill_delay, solid_delay]
+    ['mlLogo',       200,  500,  900],
+    ['mlInput',      700,  1000, 1400],
+    ['mlLabel',      1100, 1400, 1700],
+    ['mlBtn1',       1500, 1700, 1950],
+    ['mlBtn2',       1600, 1800, 2050],
+    ['mlBtn3',       1700, 1900, 2150],
+    ['mlBtn4',       1800, 2000, 2250],
+    ['mlBarcodeFrame', 2300, 2600, 3000],
+    ['mlSoc1',       3200, 3500, 3800],
+    ['mlSoc2',       3300, 3600, 3900],
+    ['mlThemeBtn',   4000, 4200, 4500],
+    ['mlLogoSm',     4100, 4300, 4600],
+  ];
+
+  seq.forEach(([id, oD, fD, sD]) => {
+    phaseEl(id, [
+      { phase: 'outline', after: oD },
+      { phase: 'fill',    after: fD },
+      { phase: 'solid',   after: sD },
+    ], 0);
+  });
+
+  // Typed text moments
+  mlT(() => { if (!mlSkipped) typeText('> EasyP55 v2.1 booting...', null); }, 400);
+  mlT(() => { if (!mlSkipped) typeText('> barcode_engine.init()', null); }, 2000);
+  mlT(() => { if (!mlSkipped) typeText('> renderer.build() [OK]', null); }, 3800);
+  mlT(() => { if (!mlSkipped) typeText('> SYSTEM READY', null); }, 5400);
+
+  // Barcode bars grow
+  mlT(() => {
+    if (mlSkipped) return;
+    const lines = document.getElementById('mlBcLines');
+    if (lines) {
+      lines.classList.add('visible');
+      lines.querySelectorAll('.ml-bline').forEach((b, i) => {
+        setTimeout(() => b.classList.add('grow'), i * 22);
+      });
+    }
+  }, 3000);
+
+  // Finish
+  mlT(() => {
+    updateProgress(100);
+    mlT(finishMatrixLoader, 300);
+  }, TOTAL);
+}
+
+function finishMatrixLoader() {
+  if (mlDone) return;
+  mlDone = true;
+  updateProgress(100);
+  typeStatus('READY');
+  window._matrixRainStop();
+  const loader = document.getElementById('matrixLoader');
+  loader.classList.add('fade-out');
+  setTimeout(() => { loader.style.display = 'none'; }, 1000);
+}
+
+function skipMatrixLoader() {
+  mlSkipped = true;
+  mlTimers.forEach(clearTimeout);
+  mlTimers = [];
+  finishMatrixLoader();
+}
+
+function replayMatrixLoader() {
   document.getElementById('debugPanel').classList.remove('open');
-  startLoader();
+  // Reset all ghost elements
+  document.querySelectorAll('.ml-el').forEach(el => {
+    el.classList.remove('phase-outline', 'phase-fill', 'phase-solid', 'sweep');
+  });
+  const lines = document.getElementById('mlBcLines');
+  if (lines) {
+    lines.classList.remove('visible');
+    lines.querySelectorAll('.ml-bline').forEach(b => b.classList.remove('grow'));
+  }
+  startMatrixLoader();
 }
 
-// Kick off on page load
-window.addEventListener('load', startLoader);
+window.addEventListener('load', startMatrixLoader);
 
 /* ══════════════════════════════════════════════════════
    PLATFORM DETECTION
@@ -730,16 +1133,8 @@ function setOverride(v) { platformOverride = v; refreshDebugPanel(); }
 
 /* ══════════════════════════════════════════════════════
    SCANNER — Quagga2
-   Quagga2 is purpose-built for 1D barcodes (EAN-13, EAN-8,
-   UPC-A, Code128). It processes multiple frames and is far
-   more reliable in real-world lighting than ZXing for these
-   formats.
-
-   Multi-hit debounce: requires the same code to appear in
-   CONFIRM_HITS consecutive frames before accepting — reduces
-   false positives significantly.
 ══════════════════════════════════════════════════════ */
-const CONFIRM_HITS = 3; // frames with same code needed before accepting
+const CONFIRM_HITS = 3;
 let scannerRunning  = false;
 let lastCode        = '';
 let hitCount        = 0;
@@ -749,9 +1144,7 @@ function openScanner() {
   document.getElementById('scannerOverlay').classList.add('open');
   document.getElementById('scannerModal').classList.add('open');
   setStatus('Starting camera…', '');
-  const mode = getActiveMode();
-  console.log('[Scanner] mode:', mode);
-  initQuagga(mode);
+  initQuagga(getActiveMode());
 }
 
 function closeScannerFromOverlay(e) {
@@ -773,159 +1166,26 @@ function setStatus(msg, cls) {
 }
 
 function buildConstraints(mode) {
-  // iOS/Android: use facingMode (no device enumeration needed before permission)
-  // Desktop: facingMode is less relevant but still works
-  const base = {
-    facingMode: { ideal: 'environment' },
-    width:  { min: 640, ideal: 1280 },
-    height: { min: 480, ideal: 720  }
-  };
-  if (mode === 'desktop') {
-    // Desktop can handle higher resolution
-    base.width  = { min: 640, ideal: 1920 };
-    base.height = { min: 480, ideal: 1080 };
-  }
+  const base = { facingMode: { ideal: 'environment' }, width: { min: 640, ideal: 1280 }, height: { min: 480, ideal: 720 } };
+  if (mode === 'desktop') { base.width = { min: 640, ideal: 1920 }; base.height = { min: 480, ideal: 1080 }; }
   return base;
 }
 
 function initQuagga(mode) {
   lastCode = ''; hitCount = 0;
-
   Quagga.init({
-    inputStream: {
-      name: 'Live',
-      type: 'LiveStream',
-      target: document.getElementById('scannerTarget'),
-      constraints: buildConstraints(mode),
-      // Ensure video element has playsinline for iOS
-      willReadFrequently: true
-    },
-    locator: {
-      patchSize: 'medium',  // 'small','medium','large' — medium best for phones
-      halfSample: true       // faster on mobile
-    },
-    numOfWorkers: typeof navigator.hardwareConcurrency !== 'undefined'
-      ? Math.min(navigator.hardwareConcurrency, 4)
-      : 2,
-    frequency: 12, // frames per second to analyse
-    decoder: {
-      readers: [
-        'ean_reader',      // EAN-13 — Sainsbury's standard
-        'ean_8_reader',    // EAN-8
-        'upc_reader',      // UPC-A
-        'upc_e_reader',    // UPC-E
-        'code_128_reader'  // Code128 fallback
-      ],
-      // Draw the found barcode box in debug canvas
-      debug: { drawBoundingBox: true, showPattern: true }
-    },
-    locate: true // actively search for barcode position
-  }, function(err) {
-    if (err) {
-      console.error('[Quagga init]', err);
-      handleCameraError(err);
-      return;
-    }
-    scannerRunning = true;
-    Quagga.start();
-    setStatus('Point camera at a barcode...', '');
-
-    // Try to populate camera selector for desktop/Android after stream starts
-    if (mode !== 'ios') setTimeout(tryPopulateCameraSelector, 1500);
-  });
-
-  // Result handler — debounced multi-hit
-  Quagga.onDetected(function(result) {
-    if (!scannerRunning) return;
-    const raw  = result.codeResult.code || '';
-    const code = raw.replace(/\D/g, '');
-
-    // Validate: must be 8 or 13 digits
-    if (!/^(\d{13}|\d{8})$/.test(code)) return;
-
-    // Debounce: same code must appear CONFIRM_HITS times in a row
-    if (code === lastCode) {
-      hitCount++;
-    } else {
-      lastCode = code;
-      hitCount = 1;
-    }
-
-    if (hitCount >= CONFIRM_HITS) {
-      scannerRunning = false;
-      document.getElementById('productCode').value = code;
-      setStatus('✓ Got it: ' + code, 'success');
-      setTimeout(closeScanner, 700);
-    }
-  });
-
-  // Visual feedback: draw detection box overlay
-  Quagga.onProcessed(function(result) {
-    const ctx = Quagga.canvas.ctx.overlay;
-    const cvs = Quagga.canvas.dom.overlay;
-    if (!ctx || !cvs) return;
-    ctx.clearRect(0, 0, cvs.width, cvs.height);
-    if (result && result.boxes) {
-      result.boxes.filter(b => b !== result.box).forEach(box => {
-        Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, ctx, { color: 'rgba(104,176,106,0.3)', lineWidth: 2 });
-      });
-    }
-    if (result && result.box) {
-      Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, ctx, { color: '#68b06a', lineWidth: 3 });
-    }
-    if (result && result.codeResult && result.codeResult.code) {
-      Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, ctx, { color: '#68b06a', lineWidth: 3 });
-    }
-  });
-}
-
-function stopQuagga() {
-  scannerRunning = false;
-  lastCode = ''; hitCount = 0;
-  try { Quagga.offDetected(); Quagga.offProcessed(); Quagga.stop(); } catch(e) {}
-}
-
-async function tryPopulateCameraSelector() {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cams    = devices.filter(d => d.kind === 'videoinput' && d.label);
-    if (cams.length > 1) {
-      const sel = document.getElementById('cameraSelect');
-      sel.innerHTML = '';
-      cams.forEach((d, i) => {
-        const opt = document.createElement('option');
-        opt.value = d.deviceId;
-        opt.text  = d.label || 'Camera ' + (i + 1);
-        sel.appendChild(opt);
-      });
-      // Auto-select rear camera
-      const rearIdx = cams.findIndex(d => /back|rear|environment/i.test(d.label));
-      if (rearIdx >= 0) sel.selectedIndex = rearIdx;
-      document.getElementById('cameraSelectWrap').style.display = 'block';
-    }
-  } catch(e) { /* silent fail */ }
-}
-
-function switchCamera() {
-  stopQuagga();
-  const id   = document.getElementById('cameraSelect').value;
-  const mode = getActiveMode();
-  lastCode = ''; hitCount = 0;
-  Quagga.init({
-    inputStream: {
-      name: 'Live', type: 'LiveStream',
-      target: document.getElementById('scannerTarget'),
-      constraints: { deviceId: { exact: id } }
-    },
+    inputStream: { name: 'Live', type: 'LiveStream', target: document.getElementById('scannerTarget'), constraints: buildConstraints(mode), willReadFrequently: true },
     locator: { patchSize: 'medium', halfSample: true },
-    numOfWorkers: 2, frequency: 12,
-    decoder: { readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader','code_128_reader'] },
+    numOfWorkers: typeof navigator.hardwareConcurrency !== 'undefined' ? Math.min(navigator.hardwareConcurrency, 4) : 2,
+    frequency: 12,
+    decoder: { readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader','code_128_reader'], debug: { drawBoundingBox: true, showPattern: true } },
     locate: true
   }, function(err) {
     if (err) { handleCameraError(err); return; }
     scannerRunning = true;
     Quagga.start();
     setStatus('Point camera at a barcode...', '');
+    if (mode !== 'ios') setTimeout(tryPopulateCameraSelector, 1500);
   });
   Quagga.onDetected(function(result) {
     if (!scannerRunning) return;
@@ -939,19 +1199,60 @@ function switchCamera() {
       setTimeout(closeScanner, 700);
     }
   });
+  Quagga.onProcessed(function(result) {
+    const ctx = Quagga.canvas.ctx.overlay;
+    const cvs = Quagga.canvas.dom.overlay;
+    if (!ctx || !cvs) return;
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    if (result && result.boxes) result.boxes.filter(b => b !== result.box).forEach(box => Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, ctx, { color: 'rgba(104,176,106,0.3)', lineWidth: 2 }));
+    if (result && result.box) Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, ctx, { color: '#68b06a', lineWidth: 3 });
+    if (result && result.codeResult && result.codeResult.code) Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, ctx, { color: '#68b06a', lineWidth: 3 });
+  });
+}
+
+function stopQuagga() {
+  scannerRunning = false; lastCode = ''; hitCount = 0;
+  try { Quagga.offDetected(); Quagga.offProcessed(); Quagga.stop(); } catch(e) {}
+}
+
+async function tryPopulateCameraSelector() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams    = devices.filter(d => d.kind === 'videoinput' && d.label);
+    if (cams.length > 1) {
+      const sel = document.getElementById('cameraSelect');
+      sel.innerHTML = '';
+      cams.forEach((d, i) => { const opt = document.createElement('option'); opt.value = d.deviceId; opt.text = d.label || 'Camera ' + (i + 1); sel.appendChild(opt); });
+      const rearIdx = cams.findIndex(d => /back|rear|environment/i.test(d.label));
+      if (rearIdx >= 0) sel.selectedIndex = rearIdx;
+      document.getElementById('cameraSelectWrap').style.display = 'block';
+    }
+  } catch(e) {}
+}
+
+function switchCamera() {
+  stopQuagga();
+  const id = document.getElementById('cameraSelect').value;
+  lastCode = ''; hitCount = 0;
+  Quagga.init({ inputStream: { name: 'Live', type: 'LiveStream', target: document.getElementById('scannerTarget'), constraints: { deviceId: { exact: id } } }, locator: { patchSize: 'medium', halfSample: true }, numOfWorkers: 2, frequency: 12, decoder: { readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader','code_128_reader'] }, locate: true }, function(err) {
+    if (err) { handleCameraError(err); return; }
+    scannerRunning = true; Quagga.start(); setStatus('Point camera at a barcode...', '');
+  });
+  Quagga.onDetected(function(result) {
+    if (!scannerRunning) return;
+    const code = (result.codeResult.code || '').replace(/\D/g, '');
+    if (!/^(\d{13}|\d{8})$/.test(code)) return;
+    if (code === lastCode) { hitCount++; } else { lastCode = code; hitCount = 1; }
+    if (hitCount >= CONFIRM_HITS) { scannerRunning = false; document.getElementById('productCode').value = code; setStatus('✓ Got it: ' + code, 'success'); setTimeout(closeScanner, 700); }
+  });
 }
 
 function handleCameraError(err) {
   const name = err && (err.name || err.type || '');
-  if (/NotAllowed|PermissionDenied/i.test(name))
-    setStatus('Camera permission denied. Check browser settings.', 'error');
-  else if (/NotFound|DevicesNotFound/i.test(name))
-    setStatus('No camera found on this device.', 'error');
-  else if (/NotReadable/i.test(name))
-    setStatus('Camera is in use by another app.', 'error');
-  else
-    setStatus('Could not start camera. Try closing other apps.', 'error');
-  console.error('[Camera error]', err);
+  if (/NotAllowed|PermissionDenied/i.test(name))   setStatus('Camera permission denied. Check browser settings.', 'error');
+  else if (/NotFound|DevicesNotFound/i.test(name)) setStatus('No camera found on this device.', 'error');
+  else if (/NotReadable/i.test(name))              setStatus('Camera is in use by another app.', 'error');
+  else                                              setStatus('Could not start camera. Try closing other apps.', 'error');
 }
 
 /* ══════════════════════════════════════════════════════
@@ -959,7 +1260,9 @@ function handleCameraError(err) {
 ══════════════════════════════════════════════════════ */
 function openThemePanel()  { document.getElementById('themeOverlay').classList.add('open');    document.getElementById('themePanel').classList.add('open'); }
 function closeThemePanel() { document.getElementById('themeOverlay').classList.remove('open'); document.getElementById('themePanel').classList.remove('open'); }
-const ALL_THEMES = ['forest','ocean','violet','ember','arctic','obsidian','mint','golden','cherry','lavender','peach','sky'];
+
+const ALL_THEMES = ['forest','ocean','violet','ember','arctic','obsidian','mint','golden','cherry','lavender','peach','sky','blueprint'];
+
 function applyTheme(name, card) {
   ALL_THEMES.forEach(t => document.body.classList.remove('theme-' + t));
   document.body.classList.add('theme-' + name);
@@ -967,6 +1270,7 @@ function applyTheme(name, card) {
   card.classList.add('active');
   setTimeout(closeThemePanel, 240);
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   const def = document.querySelector('.theme-card[data-theme="forest"]');
   if (def) def.classList.add('active');
