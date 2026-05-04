@@ -2,22 +2,173 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sainsbury's Barcode Generator - 55</title>
+  <title>Sainsbury's Barcode Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    /* ══════════════════════════════════════════
+       LOADING SCREEN
+    ══════════════════════════════════════════ */
+    #loadingScreen {
+      position: fixed;
+      inset: 0;
+      background: #111614;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transition: opacity 0.8s ease;
+    }
+
+    #loadingScreen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .ls-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      position: relative;
+    }
+
+    /* Animated barcode bars */
+    .ls-barcode {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 70px;
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .ls-bar {
+      width: 4px;
+      border-radius: 2px 2px 0 0;
+      background: #68b06a;
+      animation: lsBarPulse 1.4s ease-in-out infinite;
+      transform-origin: bottom;
+    }
+
+    /* Stagger and vary heights */
+    .ls-bar:nth-child(1)  { height: 38px; animation-delay: 0.00s; }
+    .ls-bar:nth-child(2)  { height: 62px; animation-delay: 0.05s; }
+    .ls-bar:nth-child(3)  { height: 45px; animation-delay: 0.10s; }
+    .ls-bar:nth-child(4)  { height: 70px; animation-delay: 0.15s; width: 8px; }
+    .ls-bar:nth-child(5)  { height: 30px; animation-delay: 0.20s; }
+    .ls-bar:nth-child(6)  { height: 55px; animation-delay: 0.25s; }
+    .ls-bar:nth-child(7)  { height: 70px; animation-delay: 0.30s; width: 6px; }
+    .ls-bar:nth-child(8)  { height: 42px; animation-delay: 0.35s; }
+    .ls-bar:nth-child(9)  { height: 65px; animation-delay: 0.40s; }
+    .ls-bar:nth-child(10) { height: 35px; animation-delay: 0.45s; }
+    .ls-bar:nth-child(11) { height: 70px; animation-delay: 0.50s; width: 8px; }
+    .ls-bar:nth-child(12) { height: 48px; animation-delay: 0.55s; }
+    .ls-bar:nth-child(13) { height: 60px; animation-delay: 0.60s; }
+    .ls-bar:nth-child(14) { height: 70px; animation-delay: 0.65s; width: 6px; }
+    .ls-bar:nth-child(15) { height: 40px; animation-delay: 0.70s; }
+    .ls-bar:nth-child(16) { height: 55px; animation-delay: 0.75s; }
+    .ls-bar:nth-child(17) { height: 70px; animation-delay: 0.80s; width: 8px; }
+    .ls-bar:nth-child(18) { height: 33px; animation-delay: 0.85s; }
+    .ls-bar:nth-child(19) { height: 50px; animation-delay: 0.90s; }
+    .ls-bar:nth-child(20) { height: 70px; animation-delay: 0.95s; }
+
+    @keyframes lsBarPulse {
+      0%, 100% { opacity: 0.25; transform: scaleY(0.7); }
+      50%       { opacity: 1;    transform: scaleY(1); }
+    }
+
+    /* Scanning laser */
+    .ls-laser {
+      position: absolute;
+      top: 0;
+      left: -6px;
+      right: -6px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #68b06a, #a8e0aa, #68b06a, transparent);
+      box-shadow: 0 0 10px #68b06a, 0 0 24px #68b06a88;
+      animation: lsLaser 1.2s ease-in-out infinite;
+    }
+
+    @keyframes lsLaser {
+      0%   { top: 0%;   opacity: 0; }
+      8%   { opacity: 1; }
+      92%  { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    .ls-title {
+      font-family: Arial, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #dfeee0;
+      letter-spacing: 0.08em;
+      animation: lsFadeUp 0.7s ease forwards;
+      opacity: 0;
+      animation-delay: 0.3s;
+    }
+
+    .ls-sub {
+      font-family: Arial, sans-serif;
+      font-size: 0.75rem;
+      color: #4a6050;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 4px;
+      animation: lsFadeUp 0.7s ease forwards;
+      opacity: 0;
+      animation-delay: 0.55s;
+    }
+
+    @keyframes lsFadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Progress bar */
+    .ls-progress-track {
+      width: 160px;
+      height: 3px;
+      background: rgba(104,176,106,0.15);
+      border-radius: 2px;
+      margin-top: 28px;
+      overflow: hidden;
+    }
+
+    .ls-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #68b06a, #a8d8aa);
+      border-radius: 2px;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 6px #68b06a66;
+    }
+
+    .ls-tap {
+      font-family: Arial, sans-serif;
+      font-size: 0.65rem;
+      color: #3a5040;
+      margin-top: 14px;
+      letter-spacing: 0.12em;
+      animation: lsBlink 2s ease-in-out infinite;
+      animation-delay: 1.5s;
+      opacity: 0;
+    }
+
+    @keyframes lsBlink {
+      0%, 100% { opacity: 0; }
+      50%       { opacity: 1; }
+    }
+
+    /* ══════════════════════════════════════════
+       CSS VARIABLES & BASE
+    ══════════════════════════════════════════ */
     :root {
-      --bg: #1a1f1c;
-      --card: #222827;
-      --text: #dfeee0;
-      --text-sub: #6b7c6e;
-      --accent: #68b06a;
-      --accent-hover: #4f9a52;
-      --btn-bg: #2a2f2d;
-      --btn-border: #555;
-      --barcode-bg: #e6efe7;
-      --barcode-text: #1f2b21;
-      --social-bg: #2a2f2d;
-      --social-hover: #3a413f;
+      --bg: #1a1f1c; --card: #222827; --text: #dfeee0; --text-sub: #6b7c6e;
+      --accent: #68b06a; --accent-hover: #4f9a52;
+      --btn-bg: #2a2f2d; --btn-border: #555;
+      --barcode-bg: #e6efe7; --barcode-text: #1f2b21;
+      --social-bg: #2a2f2d; --social-hover: #3a413f;
       --logo-filter: brightness(1.15) saturate(1.2);
     }
 
@@ -27,611 +178,236 @@
       font-family: Arial, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      margin: 0;
-      padding: 1rem;
+      margin: 0; padding: 1rem;
       text-align: center;
       transition: background 0.4s, color 0.4s;
     }
 
     .container {
-      background: var(--card);
-      color: var(--text);
-      padding: 1.5rem;
-      border-radius: 1rem;
-      max-width: 450px;
-      margin: auto;
+      background: var(--card); color: var(--text);
+      padding: 1.5rem; border-radius: 1rem;
+      max-width: 450px; margin: auto;
       box-shadow: 0 20px rgba(0,0,0,0.5);
       transition: background 0.4s, color 0.4s;
       position: relative;
     }
 
-    /* ── Debug 3-dot button ── */
-    .debug-btn {
-      position: absolute;
-      top: 0.75rem;
-      right: 0.75rem;
-      background: none;
-      border: none;
-      color: var(--text-sub);
-      cursor: pointer;
-      padding: 0.3rem 0.4rem;
-      border-radius: 0.4rem;
-      font-size: 1.1rem;
-      line-height: 1;
-      letter-spacing: 1px;
-      margin: 0;
-      transition: color 0.2s, background 0.2s;
-      z-index: 10;
-    }
-
-    .debug-btn:hover {
-      color: var(--text);
-      background: rgba(128,128,128,0.12);
-    }
-
-    /* ── Debug panel dropdown ── */
-    .debug-panel {
-      position: absolute;
-      top: 2.6rem;
-      right: 0.75rem;
-      background: var(--card);
-      border: 1px solid var(--btn-border);
-      border-radius: 0.8rem;
-      padding: 0.9rem 1rem;
-      width: 240px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
-      z-index: 50;
-      text-align: left;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(-6px) scale(0.97);
-      transform-origin: top right;
-      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(.22,1,.36,1);
-    }
-
-    .debug-panel.open {
-      opacity: 1;
-      pointer-events: all;
-      transform: translateY(0) scale(1);
-    }
-
-    .debug-panel-title {
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-sub);
-      margin-bottom: 0.6rem;
-      font-weight: 700;
-    }
-
-    .debug-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.25rem 0;
-      font-size: 0.76rem;
-      color: var(--text);
-      border-bottom: 1px solid rgba(128,128,128,0.1);
-    }
-
-    .debug-row:last-of-type { border-bottom: none; }
-
-    .debug-row-label { color: var(--text-sub); font-size: 0.7rem; }
-
-    .debug-badge {
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 0.15rem 0.45rem;
-      border-radius: 0.3rem;
-      background: var(--btn-bg);
-      color: var(--accent);
-      border: 1px solid var(--btn-border);
-    }
-
-    .debug-badge.ios    { color: #a0c8ff; }
-    .debug-badge.android{ color: #a8e6a0; }
-    .debug-badge.desktop{ color: #d0b8ff; }
-    .debug-badge.override { color: #ffcc88; }
-
-    .debug-divider {
-      border: none;
-      border-top: 1px solid rgba(128,128,128,0.15);
-      margin: 0.6rem 0 0.5rem;
-    }
-
-    .debug-override-label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-sub);
-      margin-bottom: 0.4rem;
-    }
-
-    .debug-override-btns {
-      display: flex;
-      gap: 0.35rem;
-      flex-wrap: wrap;
-    }
-
-    .debug-override-btn {
-      flex: 1;
-      min-width: 60px;
-      background: var(--btn-bg);
-      color: var(--text);
-      border: 1px solid var(--btn-border);
-      border-radius: 0.4rem;
-      padding: 0.3rem 0.4rem;
-      font-size: 0.68rem;
-      cursor: pointer;
-      margin: 0;
-      transition: background 0.15s, border-color 0.15s;
-    }
-
-    .debug-override-btn:hover { background: var(--social-hover); }
-
-    .debug-override-btn.active-override {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
     #sainsburysLogo {
-      max-width: 100%;
-      height: auto;
-      filter: var(--logo-filter);
-      transition: filter 0.5s;
+      max-width: 100%; height: auto;
+      filter: var(--logo-filter); transition: filter 0.5s;
     }
 
     input, button {
-      padding: 0.6rem;
-      margin: 0.5rem 0;
-      font-size: 0.8rem;
-      border-radius: 0.5rem;
-      border: none;
+      padding: 0.6rem; margin: 0.5rem 0;
+      font-size: 0.8rem; border-radius: 0.5rem; border: none;
     }
 
     input[type="text"], input[type="number"] {
-      background: var(--btn-bg);
-      color: var(--text);
+      background: var(--btn-bg); color: var(--text);
       border: 1px solid var(--btn-border);
       transition: background 0.3s, color 0.3s;
     }
 
     input::placeholder { color: var(--text-sub); }
 
-    /* ── Barcode input row ── */
-    .input-row {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      margin: 0.5rem 0;
-    }
-
-    .input-row input[type="text"] {
-      flex: 1;
-      margin: 0;
-      width: 0; /* flex overrides */
-    }
-
-    .scan-btn {
-      flex-shrink: 0;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 0.5rem;
-      padding: 0.55rem 0.65rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s, transform 0.15s;
-      margin: 0;
-    }
-
-    .scan-btn:hover {
-      background: var(--accent-hover);
-      transform: scale(1.05);
-    }
-
     button.price-button {
-      background: var(--accent);
-      color: #ffffff;
-      margin: 0.3rem;
-      cursor: pointer;
-      transition: background 0.2s;
+      background: var(--accent); color: #fff;
+      margin: 0.3rem; cursor: pointer; transition: background 0.2s;
     }
-
     button.price-button:hover { background: var(--accent-hover); }
 
+    /* Input row */
+    .input-row { display: flex; align-items: center; gap: 0.4rem; margin: 0.5rem 0; }
+    .input-row input[type="text"] { flex: 1; margin: 0; width: 0; }
+
+    .scan-btn {
+      flex-shrink: 0; background: var(--accent); color: #fff;
+      border: none; border-radius: 0.5rem;
+      padding: 0.55rem 0.65rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.15s; margin: 0;
+    }
+    .scan-btn:hover { background: var(--accent-hover); transform: scale(1.05); }
+
+    /* Barcode frame */
     .barcode-frame {
-      background: var(--barcode-bg);
-      padding: 1rem;
-      border-radius: 0.8rem;
-      margin-top: 1rem;
-      transition: background 0.4s;
+      background: var(--barcode-bg); padding: 1rem;
+      border-radius: 0.8rem; margin-top: 1rem; transition: background 0.4s;
     }
-
-    .barcode-label {
-      font-size: 0.9rem;
-      margin-bottom: 0.3rem;
-      color: var(--barcode-text);
-      font-weight: bold;
-    }
-
-    .barcode-price {
-      font-size: 1rem;
-      margin-top: 0.45rem;
-      color: var(--barcode-text);
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      min-height: 1.3em;
-    }
-
+    .barcode-label { font-size: 0.9rem; margin-bottom: 0.3rem; color: var(--barcode-text); font-weight: bold; }
+    .barcode-price { font-size: 1rem; margin-top: 0.45rem; color: var(--barcode-text); font-weight: 700; letter-spacing: 0.04em; min-height: 1.3em; }
     canvas { max-width: 100%; }
+    .watermark { color: var(--text-sub); margin-top: 0.5rem; font-size: 0.72rem; line-height: 1.55; }
 
-    .watermark {
-      color: var(--text-sub);
-      margin-top: 0.5rem;
-      font-size: 0.72rem;
-      line-height: 1.55;
-    }
-
-    .socials {
-      margin-top: 1rem;
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    .social-item {
-      background: var(--social-bg);
-      padding: 0.5rem 0.8rem;
-      border-radius: 0.6rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.8rem;
-      transition: background 0.2s;
-    }
-
+    /* Socials */
+    .socials { margin-top: 1rem; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+    .social-item { background: var(--social-bg); padding: 0.5rem 0.8rem; border-radius: 0.6rem; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; transition: background 0.2s; }
     .social-item:hover { background: var(--social-hover); }
+    .copy-msg { font-size: 0.7rem; color: var(--accent); display: none; }
 
-    .copy-msg {
-      font-size: 0.7rem;
-      color: var(--accent);
-      display: none;
-    }
-
-    .bottom-row {
-      margin-top: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 1rem;
-    }
-
-    .themes-btn {
-      background: var(--btn-bg);
-      color: var(--text);
-      border: 1px solid var(--btn-border);
-      border-radius: 0.6rem;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.82rem;
-      margin: 0;
-      transition: background 0.2s, transform 0.15s;
-    }
-
-    .themes-btn:hover {
-      background: var(--social-hover);
-      transform: scale(1.03);
-    }
-
-    .triad-img {
-      width: 50px;
-      height: auto;
-      opacity: 0.82;
-      filter: var(--logo-filter);
-      transition: filter 0.5s, opacity 0.3s;
-    }
-
+    /* Bottom row */
+    .bottom-row { margin-top: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 1rem; }
+    .themes-btn { background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 0.6rem; padding: 0.5rem 1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; margin: 0; transition: background 0.2s, transform 0.15s; }
+    .themes-btn:hover { background: var(--social-hover); transform: scale(1.03); }
+    .triad-img { width: 50px; height: auto; opacity: 0.82; filter: var(--logo-filter); transition: filter 0.5s, opacity 0.3s; }
     .triad-img:hover { opacity: 1; }
 
-    /* ════════════════════════════════════════
-       CAMERA SCANNER MODAL
-    ════════════════════════════════════════ */
-    .scanner-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      z-index: 200;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
+    /* ══════════════════════════════════════════
+       DEBUG MENU
+    ══════════════════════════════════════════ */
+    .debug-btn {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      background: none; border: none; color: var(--text-sub);
+      cursor: pointer; padding: 0.3rem 0.4rem; border-radius: 0.4rem;
+      font-size: 1.1rem; line-height: 1; letter-spacing: 1px;
+      margin: 0; transition: color 0.2s, background 0.2s; z-index: 10;
     }
+    .debug-btn:hover { color: var(--text); background: rgba(128,128,128,0.12); }
 
-    .scanner-overlay.open {
-      opacity: 1;
-      pointer-events: all;
+    .debug-panel {
+      position: absolute; top: 2.6rem; right: 0.75rem;
+      background: var(--card); border: 1px solid var(--btn-border);
+      border-radius: 0.8rem; padding: 0.9rem 1rem; width: 240px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+      z-index: 50; text-align: left;
+      opacity: 0; pointer-events: none;
+      transform: translateY(-6px) scale(0.97);
+      transform-origin: top right;
+      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(.22,1,.36,1);
     }
+    .debug-panel.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+
+    .debug-panel-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-sub); margin-bottom: 0.6rem; font-weight: 700; }
+    .debug-row { display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 0; font-size: 0.76rem; color: var(--text); border-bottom: 1px solid rgba(128,128,128,0.1); }
+    .debug-row:last-of-type { border-bottom: none; }
+    .debug-row-label { color: var(--text-sub); font-size: 0.7rem; }
+    .debug-badge { font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 0.3rem; background: var(--btn-bg); color: var(--accent); border: 1px solid var(--btn-border); }
+    .debug-badge.ios    { color: #a0c8ff; }
+    .debug-badge.android{ color: #a8e6a0; }
+    .debug-badge.desktop{ color: #d0b8ff; }
+    .debug-badge.override { color: #ffcc88; }
+    .debug-divider { border: none; border-top: 1px solid rgba(128,128,128,0.15); margin: 0.6rem 0 0.5rem; }
+    .debug-override-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-sub); margin-bottom: 0.4rem; }
+    .debug-override-btns { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .debug-override-btn { flex: 1; min-width: 55px; background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 0.4rem; padding: 0.3rem 0.4rem; font-size: 0.68rem; cursor: pointer; margin: 0; transition: background 0.15s, border-color 0.15s; }
+    .debug-override-btn:hover { background: var(--social-hover); }
+    .debug-override-btn.active-override { border-color: var(--accent); color: var(--accent); }
+
+    .debug-reload-btn {
+      width: 100%; background: var(--btn-bg); color: var(--text);
+      border: 1px solid var(--btn-border); border-radius: 0.4rem;
+      padding: 0.4rem; font-size: 0.72rem; cursor: pointer; margin: 0;
+      margin-top: 0.5rem; transition: background 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .debug-reload-btn:hover { background: var(--social-hover); }
+
+    /* ══════════════════════════════════════════
+       SCANNER MODAL
+    ══════════════════════════════════════════ */
+    .scanner-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .scanner-overlay.open { opacity: 1; pointer-events: all; }
 
     .scanner-modal {
-      position: fixed;
-      top: 50%;
-      left: 50%;
+      position: fixed; top: 50%; left: 50%;
       transform: translate(-50%, -46%) scale(0.9);
-      z-index: 201;
-      background: var(--card);
+      z-index: 201; background: var(--card);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 1.3rem;
-      padding: 1.4rem;
+      border-radius: 1.3rem; padding: 1.4rem;
       width: min(380px, 92vw);
       box-shadow: 0 30px 80px rgba(0,0,0,0.7);
-      opacity: 0;
-      pointer-events: none;
+      opacity: 0; pointer-events: none;
       transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.22,1,.36,1);
     }
+    .scanner-modal.open { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
 
-    .scanner-modal.open {
-      opacity: 1;
-      pointer-events: all;
-      transform: translate(-50%, -50%) scale(1);
+    .scanner-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .scanner-title { font-size: 0.95rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .scanner-close { background: none; border: none; color: var(--text-sub); font-size: 1.3rem; cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 0.4rem; transition: color 0.2s, background 0.2s; line-height: 1; margin: 0; }
+    .scanner-close:hover { color: var(--text); background: rgba(128,128,128,0.12); }
+
+    /* Quagga renders video+canvas inside this div */
+    #scannerTarget {
+      position: relative; width: 100%;
+      border-radius: 0.9rem; overflow: hidden;
+      background: #000; aspect-ratio: 4/3;
     }
 
-    .scanner-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
+    /* Style the video Quagga injects */
+    #scannerTarget video {
+      width: 100% !important; height: 100% !important;
+      object-fit: cover; display: block;
     }
 
-    .scanner-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .scanner-close {
-      background: none;
-      border: none;
-      color: var(--text-sub);
-      font-size: 1.3rem;
-      cursor: pointer;
-      padding: 0.2rem 0.5rem;
-      border-radius: 0.4rem;
-      transition: color 0.2s, background 0.2s;
-      line-height: 1;
-      margin: 0;
-    }
-
-    .scanner-close:hover {
-      color: var(--text);
-      background: rgba(128,128,128,0.12);
-    }
-
-    /* Video feed wrapper */
-    .video-wrap {
-      position: relative;
-      width: 100%;
-      border-radius: 0.9rem;
-      overflow: hidden;
-      background: #000;
-      aspect-ratio: 4/3;
-    }
-
-    #scannerVideo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    /* Animated scan line */
-    .scan-line {
-      position: absolute;
-      left: 8%;
-      width: 84%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      box-shadow: 0 0 8px var(--accent);
-      animation: scanline 2s ease-in-out infinite;
-      top: 50%;
-    }
-
-    @keyframes scanline {
-      0%   { top: 15%; opacity: 0; }
-      10%  { opacity: 1; }
-      90%  { opacity: 1; }
-      100% { top: 85%; opacity: 0; }
+    /* Hide the Quagga debug canvas but keep the drawingBuffer canvas */
+    #scannerTarget canvas.drawingBuffer {
+      display: none;
     }
 
     /* Corner guides */
     .scan-guide {
-      position: absolute;
-      inset: 10%;
-      pointer-events: none;
+      position: absolute; inset: 10%;
+      pointer-events: none; z-index: 2;
     }
-
-    .scan-guide::before,
-    .scan-guide::after,
-    .scan-guide-inner::before,
-    .scan-guide-inner::after {
-      content: '';
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      border-color: var(--accent);
-      border-style: solid;
-      opacity: 0.85;
+    .scan-guide::before, .scan-guide::after,
+    .scan-guide-inner::before, .scan-guide-inner::after {
+      content: ''; position: absolute;
+      width: 22px; height: 22px;
+      border-color: var(--accent); border-style: solid; opacity: 0.9;
     }
-
     .scan-guide::before       { top: 0;    left: 0;   border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
     .scan-guide::after        { top: 0;    right: 0;  border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
     .scan-guide-inner::before { bottom: 0; left: 0;   border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
     .scan-guide-inner::after  { bottom: 0; right: 0;  border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
 
-    /* Status text below video */
-    .scanner-status {
-      margin-top: 0.85rem;
-      font-size: 0.8rem;
-      color: var(--text-sub);
-      min-height: 1.4em;
-      transition: color 0.3s;
+    /* Animated scan laser */
+    .scan-line {
+      position: absolute; left: 8%; width: 84%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: scanline 2s ease-in-out infinite; top: 50%; z-index: 3;
+    }
+    @keyframes scanline {
+      0%   { top: 12%; opacity: 0; }
+      8%   { opacity: 1; }
+      92%  { opacity: 1; }
+      100% { top: 88%; opacity: 0; }
     }
 
-    .scanner-status.success {
-      color: var(--accent);
-      font-weight: 600;
-    }
+    .scanner-status { margin-top: 0.85rem; font-size: 0.8rem; color: var(--text-sub); min-height: 1.4em; transition: color 0.3s; }
+    .scanner-status.success { color: var(--accent); font-weight: 600; }
+    .scanner-status.error   { color: #e05555; }
 
-    .scanner-status.error {
-      color: #e05555;
-    }
+    .camera-select-wrap { margin-top: 0.7rem; }
+    #cameraSelect { width: 100%; background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 0.5rem; padding: 0.5rem; font-size: 0.78rem; cursor: pointer; margin: 0; }
 
-    /* Camera select (if multiple cameras) */
-    .camera-select-wrap {
-      margin-top: 0.7rem;
-    }
-
-    #cameraSelect {
-      width: 100%;
-      background: var(--btn-bg);
-      color: var(--text);
-      border: 1px solid var(--btn-border);
-      border-radius: 0.5rem;
-      padding: 0.5rem;
-      font-size: 0.78rem;
-      cursor: pointer;
-      margin: 0;
-    }
-
-    /* ════════════════════════════════════════
-       THEME PANEL
-    ════════════════════════════════════════ */
-    .theme-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s ease;
-    }
-
+    /* ══════════════════════════════════════════
+       THEME SYSTEM
+    ══════════════════════════════════════════ */
+    .theme-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
     .theme-overlay.open { opacity: 1; pointer-events: all; }
 
-    .theme-panel {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -46%) scale(0.88);
-      z-index: 101;
-      background: var(--card);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 1.3rem;
-      padding: 1.5rem 1.3rem;
-      width: min(420px, 92vw);
-      box-shadow: 0 30px 80px rgba(0,0,0,0.65);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.22,1,.36,1);
-    }
-
-    .theme-panel.open {
-      opacity: 1;
-      pointer-events: all;
-      transform: translate(-50%, -50%) scale(1);
-    }
-
-    .theme-panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-
-    .theme-panel-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .theme-close {
-      background: none;
-      border: none;
-      color: var(--text-sub);
-      font-size: 1.3rem;
-      cursor: pointer;
-      padding: 0.2rem 0.5rem;
-      border-radius: 0.4rem;
-      transition: color 0.2s, background 0.2s;
-      line-height: 1;
-      margin: 0;
-    }
-
+    .theme-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -46%) scale(0.88); z-index: 101; background: var(--card); border: 1px solid rgba(255,255,255,0.09); border-radius: 1.3rem; padding: 1.5rem 1.3rem; width: min(420px, 92vw); box-shadow: 0 30px 80px rgba(0,0,0,0.65); opacity: 0; pointer-events: none; transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.22,1,.36,1); }
+    .theme-panel.open { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+    .theme-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .theme-panel-title { font-size: 1rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .theme-close { background: none; border: none; color: var(--text-sub); font-size: 1.3rem; cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 0.4rem; transition: color 0.2s, background 0.2s; line-height: 1; margin: 0; }
     .theme-close:hover { color: var(--text); background: rgba(128,128,128,0.12); }
-
-    .theme-section-label {
-      font-size: 0.62rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-sub);
-      text-align: left;
-      margin: 0.8rem 0 0.4rem;
-    }
-
-    .theme-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 0.45rem;
-    }
-
-    .theme-card {
-      border-radius: 0.7rem;
-      padding: 0.5rem 0.25rem;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color 0.2s, transform 0.18s, box-shadow 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
+    .theme-section-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-sub); text-align: left; margin: 0.8rem 0 0.4rem; }
+    .theme-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.45rem; }
+    .theme-card { border-radius: 0.7rem; padding: 0.5rem 0.25rem; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s, transform 0.18s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; }
     .theme-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
-
-    .theme-card.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(104,176,106,0.22);
-    }
-
-    .theme-swatch {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.28);
-    }
-
+    .theme-card.active { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(104,176,106,0.22); }
+    .theme-swatch { width: 36px; height: 36px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.28); }
     .theme-swatch-half { position: absolute; top: 0; width: 50%; height: 100%; }
     .theme-swatch-left  { left: 0; }
     .theme-swatch-right { right: 0; }
 
-    /* Swatch colours */
     [data-theme="forest"]   { background:#1e2922; } [data-theme="forest"]   .theme-swatch-left{background:#1a1f1c;} [data-theme="forest"]   .theme-swatch-right{background:#68b06a;}
     [data-theme="ocean"]    { background:#111a28; } [data-theme="ocean"]    .theme-swatch-left{background:#0d1520;} [data-theme="ocean"]    .theme-swatch-right{background:#3a8eff;}
     [data-theme="violet"]   { background:#1c1428; } [data-theme="violet"]   .theme-swatch-left{background:#130e1f;} [data-theme="violet"]   .theme-swatch-right{background:#a066e8;}
@@ -645,7 +421,6 @@
     [data-theme="peach"]    { background:#fef0e8; } [data-theme="peach"]    .theme-swatch-left{background:#fff7f2;} [data-theme="peach"]    .theme-swatch-right{background:#e8733a;}
     [data-theme="sky"]      { background:#e8f4fc; } [data-theme="sky"]      .theme-swatch-left{background:#f0f8ff;} [data-theme="sky"]      .theme-swatch-right{background:#1a90d4;}
 
-    /* Theme variable overrides */
     body.theme-forest   { --bg:#1a1f1c; --card:#222827; --text:#dfeee0; --text-sub:#6b7c6e; --accent:#68b06a; --accent-hover:#4f9a52; --btn-bg:#2a2f2d; --btn-border:#555; --barcode-bg:#e6efe7; --barcode-text:#1f2b21; --social-bg:#2a2f2d; --social-hover:#3a413f; --logo-filter:brightness(1.15) saturate(1.2); }
     body.theme-ocean    { --bg:#0d1520; --card:#111e30; --text:#c8ddfa; --text-sub:#4a6080; --accent:#3a8eff; --accent-hover:#1a70f0; --btn-bg:#162035; --btn-border:#2a4060; --barcode-bg:#ddeeff; --barcode-text:#061428; --social-bg:#162035; --social-hover:#1e2e48; --logo-filter:brightness(1.2) hue-rotate(160deg) saturate(1.8); }
     body.theme-violet   { --bg:#130e1f; --card:#1c1428; --text:#e0d4f8; --text-sub:#6a5080; --accent:#a066e8; --accent-hover:#8244d4; --btn-bg:#261b3a; --btn-border:#4a3060; --barcode-bg:#f0e8ff; --barcode-text:#1a0a30; --social-bg:#261b3a; --social-hover:#32244e; --logo-filter:brightness(1.2) hue-rotate(260deg) saturate(2); }
@@ -663,16 +438,39 @@
     body.theme-lavender input, body.theme-peach input, body.theme-sky input { color: var(--text); }
   </style>
 </head>
-
 <body class="theme-forest">
 
-<!-- ═══ SCANNER OVERLAY ═══ -->
-<div class="scanner-overlay" id="scannerOverlay" onclick="closeScannerFromOverlay(event)"></div>
+<!-- ══════════════════════════════════════════
+     LOADING SCREEN
+══════════════════════════════════════════ -->
+<div id="loadingScreen" onclick="skipLoader()">
+  <div class="ls-wrap">
+    <div class="ls-barcode">
+      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
+      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
+      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
+      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
+      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
+      <div class="ls-bar"></div><div class="ls-bar"></div><div class="ls-bar"></div>
+      <div class="ls-bar"></div><div class="ls-bar"></div>
+      <div class="ls-laser"></div>
+    </div>
+    <div class="ls-title">EasyP55</div>
+    <div class="ls-sub">Barcode Generator</div>
+    <div class="ls-progress-track">
+      <div class="ls-progress-fill" id="lsBar"></div>
+    </div>
+    <div class="ls-tap">tap to skip</div>
+  </div>
+</div>
 
+<!-- ══════════════════════════════════════════
+     SCANNER
+══════════════════════════════════════════ -->
+<div class="scanner-overlay" id="scannerOverlay" onclick="closeScannerFromOverlay(event)"></div>
 <div class="scanner-modal" id="scannerModal">
   <div class="scanner-header">
     <div class="scanner-title">
-      <!-- Camera SVG -->
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
         <circle cx="12" cy="13" r="4"/>
@@ -681,25 +479,20 @@
     </div>
     <button class="scanner-close" onclick="closeScanner()">✕</button>
   </div>
-
-  <div class="video-wrap">
-    <video id="scannerVideo" autoplay muted playsinline></video>
+  <div id="scannerTarget">
     <div class="scan-guide"><div class="scan-guide-inner"></div></div>
     <div class="scan-line"></div>
   </div>
-
   <div class="scanner-status" id="scannerStatus">Point camera at a barcode...</div>
-
   <div class="camera-select-wrap" id="cameraSelectWrap" style="display:none;">
-    <select id="cameraSelect" onchange="switchCamera()">
-    </select>
+    <select id="cameraSelect" onchange="switchCamera()"></select>
   </div>
 </div>
 
-<!-- ═══ THEME OVERLAY ═══ -->
+<!-- ══════════════════════════════════════════
+     THEME PANEL
+══════════════════════════════════════════ -->
 <div class="theme-overlay" id="themeOverlay" onclick="closeThemePanel()"></div>
-
-<!-- ═══ THEME PANEL ═══ -->
 <div class="theme-panel" id="themePanel">
   <div class="theme-panel-header">
     <div class="theme-panel-title">
@@ -713,7 +506,6 @@
     </div>
     <button class="theme-close" onclick="closeThemePanel()">✕</button>
   </div>
-
   <div class="theme-section-label">Dark</div>
   <div class="theme-grid">
     <div class="theme-card" data-theme="forest"   onclick="applyTheme('forest',this)"><div class="theme-swatch"><div class="theme-swatch-half theme-swatch-left"></div><div class="theme-swatch-half theme-swatch-right"></div></div></div>
@@ -723,7 +515,6 @@
     <div class="theme-card" data-theme="arctic"   onclick="applyTheme('arctic',this)"><div class="theme-swatch"><div class="theme-swatch-half theme-swatch-left"></div><div class="theme-swatch-half theme-swatch-right"></div></div></div>
     <div class="theme-card" data-theme="obsidian" onclick="applyTheme('obsidian',this)"><div class="theme-swatch"><div class="theme-swatch-half theme-swatch-left"></div><div class="theme-swatch-half theme-swatch-right"></div></div></div>
   </div>
-
   <div class="theme-section-label">Light</div>
   <div class="theme-grid">
     <div class="theme-card" data-theme="mint"     onclick="applyTheme('mint',this)"><div class="theme-swatch"><div class="theme-swatch-half theme-swatch-left"></div><div class="theme-swatch-half theme-swatch-right"></div></div></div>
@@ -735,34 +526,20 @@
   </div>
 </div>
 
-<!-- ═══ MAIN CONTAINER ═══ -->
+<!-- ══════════════════════════════════════════
+     MAIN CONTAINER
+══════════════════════════════════════════ -->
 <div class="container">
 
-  <!-- 3-dot debug button -->
-  <button class="debug-btn" onclick="toggleDebugMenu(event)" title="Debug menu">⋮</button>
-
-  <!-- Debug panel -->
+  <button class="debug-btn" onclick="toggleDebugMenu(event)" title="Debug">⋮</button>
   <div class="debug-panel" id="debugPanel">
     <div class="debug-panel-title">⚙ Debug</div>
-
-    <div class="debug-row">
-      <span class="debug-row-label">Detected OS</span>
-      <span class="debug-badge" id="dbgOS">—</span>
-    </div>
-    <div class="debug-row">
-      <span class="debug-row-label">Browser</span>
-      <span class="debug-badge" id="dbgBrowser">—</span>
-    </div>
-    <div class="debug-row">
-      <span class="debug-row-label">Camera API</span>
-      <span class="debug-badge" id="dbgCameraAPI">—</span>
-    </div>
-    <div class="debug-row">
-      <span class="debug-row-label">Active mode</span>
-      <span class="debug-badge override" id="dbgActive">—</span>
-    </div>
-
-    <hr class="debug-divider" />
+    <div class="debug-row"><span class="debug-row-label">Detected OS</span><span class="debug-badge" id="dbgOS">—</span></div>
+    <div class="debug-row"><span class="debug-row-label">Browser</span><span class="debug-badge" id="dbgBrowser">—</span></div>
+    <div class="debug-row"><span class="debug-row-label">Camera API</span><span class="debug-badge" id="dbgCameraAPI">—</span></div>
+    <div class="debug-row"><span class="debug-row-label">Scanner lib</span><span class="debug-badge" id="dbgLib">—</span></div>
+    <div class="debug-row"><span class="debug-row-label">Active mode</span><span class="debug-badge override" id="dbgActive">—</span></div>
+    <hr class="debug-divider"/>
     <div class="debug-override-label">Force scanner mode</div>
     <div class="debug-override-btns">
       <button class="debug-override-btn" id="ovr-auto"    onclick="setOverride('auto')">Auto</button>
@@ -770,16 +547,20 @@
       <button class="debug-override-btn" id="ovr-android" onclick="setOverride('android')">Android</button>
       <button class="debug-override-btn" id="ovr-desktop" onclick="setOverride('desktop')">Desktop</button>
     </div>
+    <button class="debug-reload-btn" onclick="replayLoader()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+      </svg>
+      Replay loading screen
+    </button>
   </div>
 
   <img id="sainsburysLogo" src="Sainsbury's_idRe1DHyjA_1.png" alt="Sainsbury's Logo" />
 
-  <!-- Barcode input + scan button -->
   <div class="input-row">
     <input type="text" id="productCode" placeholder="Enter 13 or 8 digit barcode" maxlength="13"
            oninput="this.value=this.value.replace(/\D/g,'').slice(0,13)" />
     <button class="scan-btn" onclick="openScanner()" title="Scan barcode with camera">
-      <!-- Camera SVG -->
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
         <circle cx="12" cy="13" r="4"/>
@@ -787,8 +568,7 @@
     </button>
   </div>
 
-  <input type="text" id="barcodeLabelInput" placeholder="Enter label for barcode" maxlength="30"
-         style="width:calc(100% - 1rem);" />
+  <input type="text" id="barcodeLabelInput" placeholder="Enter label for barcode" maxlength="30" style="width:calc(100% - 1rem);" />
 
   <div>
     <button class="price-button" onclick="setPriceAndGenerate(10)">10p</button>
@@ -798,8 +578,7 @@
   </div>
 
   <div id="customPriceContainer" style="display:none;">
-    <input type="number" id="price" placeholder="Enter price in pence" min="1" max="9999"
-           style="width:calc(100% - 1rem);" />
+    <input type="number" id="price" placeholder="Enter price in pence" min="1" max="9999" style="width:calc(100% - 1rem);" />
     <button onclick="generateBarcode()">Generate Barcode</button>
   </div>
 
@@ -812,18 +591,12 @@
 
   <div class="socials">
     <div class="social-item" onclick="copyText('imjustsomeguyy', this)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="#5865F2">
-        <path d="M20 4a16 16 0 0 0-4-1l-.2.4a14 14 0 0 1 3.6 1.7 13 13 0 0 0-3.2-1.5 12 12 0 0 0-4.2 0A13 13 0 0 0 8.8 5a14 14 0 0 1 3.6-1.7L12 3a16 16 0 0 0-4 1C5.6 7.6 5 11 5.2 14.4A16 16 0 0 0 9.6 16l.8-1.1a10 10 0 0 1-1.3-.6l.3-.2c2.5 1.1 5.3 1.1 7.8 0l.3.2c-.4.2-.9.4-1.3.6l.8 1.1a16 16 0 0 0 4.4-1.6C19 11 18.4 7.6 20 4z"/>
-      </svg>
-      imjustsomeguyy
-      <span class="copy-msg">Copied!</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#5865F2"><path d="M20 4a16 16 0 0 0-4-1l-.2.4a14 14 0 0 1 3.6 1.7 13 13 0 0 0-3.2-1.5 12 12 0 0 0-4.2 0A13 13 0 0 0 8.8 5a14 14 0 0 1 3.6-1.7L12 3a16 16 0 0 0-4 1C5.6 7.6 5 11 5.2 14.4A16 16 0 0 0 9.6 16l.8-1.1a10 10 0 0 1-1.3-.6l.3-.2c2.5 1.1 5.3 1.1 7.8 0l.3.2c-.4.2-.9.4-1.3.6l.8 1.1a16 16 0 0 0 4.4-1.6C19 11 18.4 7.6 20 4z"/></svg>
+      imjustsomeguyy <span class="copy-msg">Copied!</span>
     </div>
     <div class="social-item" onclick="copyText('somerandomahguy', this)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFC00">
-        <path d="M12 2c2.5 0 4.5 2 4.5 4.5v3.2c.7.5 1.6.8 2.5.8.3 0 .5.2.5.5s-.2.5-.5.5c-.9 0-1.8.3-2.5.8v.7c0 2.5-2 4.5-4.5 4.5s-4.5-2-4.5-4.5v-.7c-.7-.5-1.6-.8-2.5-.8-.3 0-.5-.2-.5-.5s.2-.5.5-.5c.9 0 1.8-.3 2.5-.8V6.5C7.5 4 9.5 2 12 2z"/>
-      </svg>
-      somerandomahguy
-      <span class="copy-msg">Copied!</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFC00"><path d="M12 2c2.5 0 4.5 2 4.5 4.5v3.2c.7.5 1.6.8 2.5.8.3 0 .5.2.5.5s-.2.5-.5.5c-.9 0-1.8.3-2.5.8v.7c0 2.5-2 4.5-4.5 4.5s-4.5-2-4.5-4.5v-.7c-.7-.5-1.6-.8-2.5-.8-.3 0-.5-.2-.5-.5s.2-.5.5-.5c.9 0 1.8-.3 2.5-.8V6.5C7.5 4 9.5 2 12 2z"/></svg>
+      somerandomahguy <span class="copy-msg">Copied!</span>
     </div>
   </div>
 
@@ -839,425 +612,412 @@
   </div>
 </div>
 
-<!-- ZXing barcode reader library -->
-<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<!-- Quagga2 — far better EAN/UPC detection than ZXing for real-world barcodes -->
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
 <script>
-  /* ══════════════════════════════════════════════════════
-     PLATFORM DETECTION
-  ══════════════════════════════════════════════════════ */
-  const UA = navigator.userAgent || '';
+/* ══════════════════════════════════════════════════════
+   LOADING SCREEN
+══════════════════════════════════════════════════════ */
+const LOADER_DURATION = 5000; // ms
+let loaderTimer = null;
+let loaderInterval = null;
+let loaderDone = false;
 
-  function detectOS() {
-    if (/iphone|ipad|ipod/i.test(UA))                          return 'ios';
-    if (/android/i.test(UA))                                   return 'android';
-    if (/macintosh|mac os x/i.test(UA) && !('ontouchend' in document)) return 'macos';
-    if (/windows/i.test(UA))                                   return 'windows';
-    if (/linux/i.test(UA))                                     return 'linux';
-    return 'unknown';
+function startLoader() {
+  const screen   = document.getElementById('loadingScreen');
+  const bar      = document.getElementById('lsBar');
+  loaderDone     = false;
+  screen.style.display  = 'flex';
+  screen.style.opacity  = '1';
+  screen.classList.remove('fade-out');
+  bar.style.width       = '0%';
+
+  const startTime = Date.now();
+
+  clearInterval(loaderInterval);
+  loaderInterval = setInterval(() => {
+    const pct = Math.min(100, ((Date.now() - startTime) / LOADER_DURATION) * 100);
+    bar.style.width = pct + '%';
+    if (pct >= 100) finishLoader();
+  }, 40);
+}
+
+function finishLoader() {
+  if (loaderDone) return;
+  loaderDone = true;
+  clearInterval(loaderInterval);
+  document.getElementById('lsBar').style.width = '100%';
+  setTimeout(() => {
+    const screen = document.getElementById('loadingScreen');
+    screen.classList.add('fade-out');
+    setTimeout(() => { screen.style.display = 'none'; }, 800);
+  }, 200);
+}
+
+function skipLoader() {
+  clearInterval(loaderInterval);
+  finishLoader();
+}
+
+function replayLoader() {
+  document.getElementById('debugPanel').classList.remove('open');
+  startLoader();
+}
+
+// Kick off on page load
+window.addEventListener('load', startLoader);
+
+/* ══════════════════════════════════════════════════════
+   PLATFORM DETECTION
+══════════════════════════════════════════════════════ */
+const UA = navigator.userAgent || '';
+function detectOS() {
+  if (/iphone|ipad|ipod/i.test(UA))                                    return 'ios';
+  if (/android/i.test(UA))                                             return 'android';
+  if (/macintosh|mac os x/i.test(UA) && !('ontouchend' in document))  return 'macos';
+  if (/windows/i.test(UA))                                             return 'windows';
+  return 'linux';
+}
+function detectBrowser() {
+  if (/samsungbrowser/i.test(UA)) return 'Samsung';
+  if (/edg\//i.test(UA))          return 'Edge';
+  if (/opr\//i.test(UA))          return 'Opera';
+  if (/firefox/i.test(UA))        return 'Firefox';
+  if (/chrome/i.test(UA))         return 'Chrome';
+  if (/safari/i.test(UA))         return 'Safari';
+  return 'Unknown';
+}
+function deriveScannerMode(os) {
+  if (os === 'ios')     return 'ios';
+  if (os === 'android') return 'android';
+  return 'desktop';
+}
+
+const detectedOS      = detectOS();
+const detectedBrowser = detectBrowser();
+const detectedMode    = deriveScannerMode(detectedOS);
+let   platformOverride = 'auto';
+function getActiveMode() { return platformOverride === 'auto' ? detectedMode : platformOverride; }
+
+function toggleDebugMenu(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('debugPanel');
+  if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+  refreshDebugPanel();
+  panel.classList.add('open');
+}
+document.addEventListener('click', () => document.getElementById('debugPanel').classList.remove('open'));
+
+function refreshDebugPanel() {
+  const hasCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const hasQ   = !!(window.Quagga);
+  const osEl   = document.getElementById('dbgOS');
+  osEl.textContent = detectedOS;
+  osEl.className   = 'debug-badge ' + (detectedOS === 'ios' ? 'ios' : detectedOS === 'android' ? 'android' : 'desktop');
+  document.getElementById('dbgBrowser').textContent  = detectedBrowser;
+  document.getElementById('dbgCameraAPI').textContent = hasCam ? 'getUserMedia ✓' : '✗ Not available';
+  document.getElementById('dbgLib').textContent       = hasQ   ? 'Quagga2 ✓'      : '✗ Not loaded';
+  const activeEl = document.getElementById('dbgActive');
+  activeEl.textContent = getActiveMode() + (platformOverride !== 'auto' ? ' (forced)' : ' (auto)');
+  ['auto','ios','android','desktop'].forEach(k => {
+    const b = document.getElementById('ovr-' + k);
+    if (b) b.classList.toggle('active-override', platformOverride === k);
+  });
+}
+function setOverride(v) { platformOverride = v; refreshDebugPanel(); }
+
+/* ══════════════════════════════════════════════════════
+   SCANNER — Quagga2
+   Quagga2 is purpose-built for 1D barcodes (EAN-13, EAN-8,
+   UPC-A, Code128). It processes multiple frames and is far
+   more reliable in real-world lighting than ZXing for these
+   formats.
+
+   Multi-hit debounce: requires the same code to appear in
+   CONFIRM_HITS consecutive frames before accepting — reduces
+   false positives significantly.
+══════════════════════════════════════════════════════ */
+const CONFIRM_HITS = 3; // frames with same code needed before accepting
+let scannerRunning  = false;
+let lastCode        = '';
+let hitCount        = 0;
+
+function openScanner() {
+  if (!window.Quagga) { alert('Scanner library not loaded. Please refresh.'); return; }
+  document.getElementById('scannerOverlay').classList.add('open');
+  document.getElementById('scannerModal').classList.add('open');
+  setStatus('Starting camera…', '');
+  const mode = getActiveMode();
+  console.log('[Scanner] mode:', mode);
+  initQuagga(mode);
+}
+
+function closeScannerFromOverlay(e) {
+  if (e.target === document.getElementById('scannerOverlay')) closeScanner();
+}
+
+function closeScanner() {
+  stopQuagga();
+  document.getElementById('scannerOverlay').classList.remove('open');
+  document.getElementById('scannerModal').classList.remove('open');
+  document.getElementById('cameraSelectWrap').style.display = 'none';
+  setStatus('Point camera at a barcode...', '');
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('scannerStatus');
+  el.textContent = msg;
+  el.className = 'scanner-status' + (cls ? ' ' + cls : '');
+}
+
+function buildConstraints(mode) {
+  // iOS/Android: use facingMode (no device enumeration needed before permission)
+  // Desktop: facingMode is less relevant but still works
+  const base = {
+    facingMode: { ideal: 'environment' },
+    width:  { min: 640, ideal: 1280 },
+    height: { min: 480, ideal: 720  }
+  };
+  if (mode === 'desktop') {
+    // Desktop can handle higher resolution
+    base.width  = { min: 640, ideal: 1920 };
+    base.height = { min: 480, ideal: 1080 };
   }
+  return base;
+}
 
-  function detectBrowser() {
-    if (/samsungbrowser/i.test(UA))  return 'Samsung';
-    if (/edg\//i.test(UA))           return 'Edge';
-    if (/opr\//i.test(UA))           return 'Opera';
-    if (/firefox/i.test(UA))         return 'Firefox';
-    if (/chrome/i.test(UA))          return 'Chrome';
-    if (/safari/i.test(UA))          return 'Safari';
-    return 'Unknown';
-  }
+function initQuagga(mode) {
+  lastCode = ''; hitCount = 0;
 
-  // 'ios' | 'android' | 'desktop'  — the scanner mode to use
-  function deriveScannerMode(os) {
-    if (os === 'ios')     return 'ios';
-    if (os === 'android') return 'android';
-    return 'desktop';
-  }
+  Quagga.init({
+    inputStream: {
+      name: 'Live',
+      type: 'LiveStream',
+      target: document.getElementById('scannerTarget'),
+      constraints: buildConstraints(mode),
+      // Ensure video element has playsinline for iOS
+      willReadFrequently: true
+    },
+    locator: {
+      patchSize: 'medium',  // 'small','medium','large' — medium best for phones
+      halfSample: true       // faster on mobile
+    },
+    numOfWorkers: typeof navigator.hardwareConcurrency !== 'undefined'
+      ? Math.min(navigator.hardwareConcurrency, 4)
+      : 2,
+    frequency: 12, // frames per second to analyse
+    decoder: {
+      readers: [
+        'ean_reader',      // EAN-13 — Sainsbury's standard
+        'ean_8_reader',    // EAN-8
+        'upc_reader',      // UPC-A
+        'upc_e_reader',    // UPC-E
+        'code_128_reader'  // Code128 fallback
+      ],
+      // Draw the found barcode box in debug canvas
+      debug: { drawBoundingBox: true, showPattern: true }
+    },
+    locate: true // actively search for barcode position
+  }, function(err) {
+    if (err) {
+      console.error('[Quagga init]', err);
+      handleCameraError(err);
+      return;
+    }
+    scannerRunning = true;
+    Quagga.start();
+    setStatus('Point camera at a barcode...', '');
 
-  const detectedOS      = detectOS();
-  const detectedBrowser = detectBrowser();
-  const detectedMode    = deriveScannerMode(detectedOS);
-
-  // Can be overridden by the debug menu
-  let platformOverride = 'auto'; // 'auto' | 'ios' | 'android' | 'desktop'
-
-  function getActiveMode() {
-    return platformOverride === 'auto' ? detectedMode : platformOverride;
-  }
-
-  /* ── Debug menu ── */
-  function toggleDebugMenu(e) {
-    e.stopPropagation();
-    const panel = document.getElementById('debugPanel');
-    const isOpen = panel.classList.contains('open');
-    if (isOpen) { panel.classList.remove('open'); return; }
-    refreshDebugPanel();
-    panel.classList.add('open');
-  }
-
-  document.addEventListener('click', () => {
-    document.getElementById('debugPanel').classList.remove('open');
+    // Try to populate camera selector for desktop/Android after stream starts
+    if (mode !== 'ios') setTimeout(tryPopulateCameraSelector, 1500);
   });
 
-  function refreshDebugPanel() {
-    const os      = detectedOS;
-    const browser = detectedBrowser;
-    const mode    = getActiveMode();
-    const hasCam  = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  // Result handler — debounced multi-hit
+  Quagga.onDetected(function(result) {
+    if (!scannerRunning) return;
+    const raw  = result.codeResult.code || '';
+    const code = raw.replace(/\D/g, '');
 
-    const osEl = document.getElementById('dbgOS');
-    osEl.textContent = os;
-    osEl.className   = 'debug-badge ' + (os === 'ios' ? 'ios' : os === 'android' ? 'android' : 'desktop');
+    // Validate: must be 8 or 13 digits
+    if (!/^(\d{13}|\d{8})$/.test(code)) return;
 
-    document.getElementById('dbgBrowser').textContent = browser;
-    document.getElementById('dbgCameraAPI').textContent = hasCam ? 'getUserMedia ✓' : 'Not available ✗';
+    // Debounce: same code must appear CONFIRM_HITS times in a row
+    if (code === lastCode) {
+      hitCount++;
+    } else {
+      lastCode = code;
+      hitCount = 1;
+    }
 
-    const activeEl = document.getElementById('dbgActive');
-    activeEl.textContent = mode + (platformOverride !== 'auto' ? ' (forced)' : ' (auto)');
+    if (hitCount >= CONFIRM_HITS) {
+      scannerRunning = false;
+      document.getElementById('productCode').value = code;
+      setStatus('✓ Got it: ' + code, 'success');
+      setTimeout(closeScanner, 700);
+    }
+  });
 
-    // Highlight active override button
-    ['auto','ios','android','desktop'].forEach(k => {
-      const btn = document.getElementById('ovr-' + k);
-      if (btn) btn.classList.toggle('active-override', platformOverride === k);
-    });
-  }
+  // Visual feedback: draw detection box overlay
+  Quagga.onProcessed(function(result) {
+    const ctx = Quagga.canvas.ctx.overlay;
+    const cvs = Quagga.canvas.dom.overlay;
+    if (!ctx || !cvs) return;
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    if (result && result.boxes) {
+      result.boxes.filter(b => b !== result.box).forEach(box => {
+        Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, ctx, { color: 'rgba(104,176,106,0.3)', lineWidth: 2 });
+      });
+    }
+    if (result && result.box) {
+      Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, ctx, { color: '#68b06a', lineWidth: 3 });
+    }
+    if (result && result.codeResult && result.codeResult.code) {
+      Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, ctx, { color: '#68b06a', lineWidth: 3 });
+    }
+  });
+}
 
-  function setOverride(val) {
-    platformOverride = val;
-    refreshDebugPanel();
-  }
+function stopQuagga() {
+  scannerRunning = false;
+  lastCode = ''; hitCount = 0;
+  try { Quagga.offDetected(); Quagga.offProcessed(); Quagga.stop(); } catch(e) {}
+}
 
-  /* ══════════════════════════════════════════════════════
-     SCANNER
-     Three modes — all use live continuous auto-detection,
-     no photo/confirm step needed.
-
-     iOS:     decodeFromConstraints only (no enumeration before permission)
-     Android: decodeFromConstraints first, tries enumeration after for
-              multi-camera switch (rear auto-selected)
-     Desktop: enumerates devices first, shows camera selector
-  ══════════════════════════════════════════════════════ */
-  let codeReader = null;
-  let scanning   = false;
-
-  function openScanner() {
-    document.getElementById('scannerOverlay').classList.add('open');
-    document.getElementById('scannerModal').classList.add('open');
-    setStatus('Starting camera…', '');
-    const mode = getActiveMode();
-    console.log('[Scanner] mode:', mode, '| detected OS:', detectedOS);
-    if (mode === 'ios')     startScannerIOS();
-    else if (mode === 'android') startScannerAndroid();
-    else                    startScannerDesktop();
-  }
-
-  function closeScannerFromOverlay(e) {
-    if (e.target === document.getElementById('scannerOverlay')) closeScanner();
-  }
-
-  function closeScanner() {
-    stopScanner();
-    document.getElementById('scannerOverlay').classList.remove('open');
-    document.getElementById('scannerModal').classList.remove('open');
-    document.getElementById('cameraSelectWrap').style.display = 'none';
-    setStatus('Point camera at a barcode...', '');
-  }
-
-  function setStatus(msg, cls) {
-    const el = document.getElementById('scannerStatus');
-    el.textContent = msg;
-    el.className = 'scanner-status' + (cls ? ' ' + cls : '');
-  }
-
-  /* ── Shared result handler ── */
-  function handleScanResult(result) {
-    if (!scanning) return false;
-    if (!result)   return false;
-    const digits = result.getText().replace(/\D/g, '');
-    const match  = digits.match(/(\d{13}|\d{8})/);
-    if (!match) return false;
-    const code = match[1];
-    document.getElementById('productCode').value = code;
-    setStatus('✓ Got it: ' + code, 'success');
-    scanning = false;
-    setTimeout(closeScanner, 850);
-    return true;
-  }
-
-  /* ── iOS mode ──
-     Skips device enumeration entirely. Safari requires this.
-     facingMode:environment requests the rear camera directly. */
-  function startScannerIOS() {
-    if (!checkZXing()) return;
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    scanning = true;
-    setStatus('Point camera at a barcode...', '');
-    const constraints = {
-      video: { facingMode: { ideal: 'environment' } }
-    };
-    codeReader.decodeFromConstraints(constraints, 'scannerVideo', (result, err) => {
-      if (result) handleScanResult(result);
-      if (err && !(err instanceof ZXing.NotFoundException)) console.warn('[iOS] ZXing:', err);
-    }).catch(handleCameraError);
-  }
-
-  /* ── Android mode ──
-     Same constraints approach as iOS (reliable on all Android browsers).
-     After the stream starts we try to enumerate cameras so we can offer
-     a front/rear toggle if the device has multiple. */
-  function startScannerAndroid() {
-    if (!checkZXing()) return;
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    scanning = true;
-    setStatus('Point camera at a barcode...', '');
-    const constraints = {
-      video: {
-        facingMode: { ideal: 'environment' },
-        width:  { ideal: 1280 },
-        height: { ideal: 720 }
-      }
-    };
-    codeReader.decodeFromConstraints(constraints, 'scannerVideo', (result, err) => {
-      if (result) handleScanResult(result);
-      if (err && !(err instanceof ZXing.NotFoundException)) console.warn('[Android] ZXing:', err);
-    }).catch(err => {
-      // OverconstrainedError = rear camera unavailable, retry with any
-      if (err.name === 'OverconstrainedError') {
-        retryWithAnyCamera();
-      } else {
-        handleCameraError(err);
-      }
-    });
-
-    // After a brief delay (stream is live), try to enumerate for camera picker
-    setTimeout(() => tryPopulateCameraSelector(), 1200);
-  }
-
-  /* ── Desktop mode ──
-     Enumerates cameras first, auto-picks rear/environment camera,
-     shows a selector if multiple are found. */
-  async function startScannerDesktop() {
-    if (!checkZXing()) return;
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    scanning = true;
-    setStatus('Detecting cameras…', '');
-
-    try {
-      // Desktop browsers enumerate without needing permission first
-      const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-      if (devices.length === 0) {
-        setStatus('No camera found.', 'error');
-        return;
-      }
-
-      // Populate selector
+async function tryPopulateCameraSelector() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams    = devices.filter(d => d.kind === 'videoinput' && d.label);
+    if (cams.length > 1) {
       const sel = document.getElementById('cameraSelect');
       sel.innerHTML = '';
-      devices.forEach((d, i) => {
+      cams.forEach((d, i) => {
         const opt = document.createElement('option');
         opt.value = d.deviceId;
         opt.text  = d.label || 'Camera ' + (i + 1);
         sel.appendChild(opt);
       });
-
-      if (devices.length > 1) {
-        const rearIdx = devices.findIndex(d => /back|rear|environment/i.test(d.label));
-        if (rearIdx >= 0) sel.selectedIndex = rearIdx;
-        document.getElementById('cameraSelectWrap').style.display = 'block';
-      }
-
-      setStatus('Point camera at a barcode...', '');
-      codeReader.decodeFromVideoDevice(sel.value, 'scannerVideo', (result, err) => {
-        if (result) handleScanResult(result);
-        if (err && !(err instanceof ZXing.NotFoundException)) console.warn('[Desktop] ZXing:', err);
-      });
-
-    } catch (err) {
-      handleCameraError(err);
+      // Auto-select rear camera
+      const rearIdx = cams.findIndex(d => /back|rear|environment/i.test(d.label));
+      if (rearIdx >= 0) sel.selectedIndex = rearIdx;
+      document.getElementById('cameraSelectWrap').style.display = 'block';
     }
-  }
+  } catch(e) { /* silent fail */ }
+}
 
-  /* After Android stream starts, try to enumerate for camera toggle */
-  async function tryPopulateCameraSelector() {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const cams    = devices.filter(d => d.kind === 'videoinput');
-      if (cams.length > 1) {
-        const sel = document.getElementById('cameraSelect');
-        sel.innerHTML = '';
-        cams.forEach((d, i) => {
-          const opt = document.createElement('option');
-          opt.value = d.deviceId;
-          opt.text  = d.label || 'Camera ' + (i + 1);
-          sel.appendChild(opt);
-        });
-        document.getElementById('cameraSelectWrap').style.display = 'block';
-      }
-    } catch (e) { /* enumeration not available — silent fail */ }
-  }
-
-  /* Manual camera switch (desktop + Android with selector) */
-  function switchCamera() {
-    if (!codeReader) return;
-    codeReader.reset();
-    const id = document.getElementById('cameraSelect').value;
-    scanning = true;
+function switchCamera() {
+  stopQuagga();
+  const id   = document.getElementById('cameraSelect').value;
+  const mode = getActiveMode();
+  lastCode = ''; hitCount = 0;
+  Quagga.init({
+    inputStream: {
+      name: 'Live', type: 'LiveStream',
+      target: document.getElementById('scannerTarget'),
+      constraints: { deviceId: { exact: id } }
+    },
+    locator: { patchSize: 'medium', halfSample: true },
+    numOfWorkers: 2, frequency: 12,
+    decoder: { readers: ['ean_reader','ean_8_reader','upc_reader','upc_e_reader','code_128_reader'] },
+    locate: true
+  }, function(err) {
+    if (err) { handleCameraError(err); return; }
+    scannerRunning = true;
+    Quagga.start();
     setStatus('Point camera at a barcode...', '');
-    codeReader.decodeFromVideoDevice(id, 'scannerVideo', (result, err) => {
-      if (result) handleScanResult(result);
-      if (err && !(err instanceof ZXing.NotFoundException)) console.warn('[Switch] ZXing:', err);
-    });
-  }
-
-  /* Fallback: no facingMode constraint */
-  function retryWithAnyCamera() {
-    try {
-      if (codeReader) { try { codeReader.reset(); } catch(e){} }
-      codeReader = new ZXing.BrowserMultiFormatReader();
-      scanning = true;
-      setStatus('Point camera at a barcode...', '');
-      codeReader.decodeFromConstraints({ video: true }, 'scannerVideo', (result, err) => {
-        if (result) handleScanResult(result);
-      }).catch(handleCameraError);
-    } catch (e) { setStatus('Could not access camera.', 'error'); }
-  }
-
-  function stopScanner() {
-    scanning = false;
-    if (codeReader) {
-      try { codeReader.reset(); } catch (e) {}
-      codeReader = null;
-    }
-    const video = document.getElementById('scannerVideo');
-    if (video && video.srcObject) {
-      video.srcObject.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-    }
-  }
-
-  function checkZXing() {
-    if (!window.ZXing) { setStatus('Scanner library not loaded.', 'error'); return false; }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setStatus('Camera not supported on this browser.', 'error'); return false;
-    }
-    return true;
-  }
-
-  function handleCameraError(err) {
-    console.error('[Camera]', err);
-    const map = {
-      NotAllowedError:      'Camera permission denied. Check browser settings.',
-      PermissionDeniedError:'Camera permission denied. Check browser settings.',
-      NotFoundError:        'No camera found on this device.',
-      DevicesNotFoundError: 'No camera found on this device.',
-      NotReadableError:     'Camera is in use by another app.',
-      OverconstrainedError: 'Camera constraints not supported — retrying…'
-    };
-    const msg = map[err.name] || 'Could not start camera.';
-    setStatus(msg, 'error');
-    if (err.name === 'OverconstrainedError') setTimeout(retryWithAnyCamera, 500);
-  }
-
-  /* ══════════════════════════════════════
-     THEME
-  ══════════════════════════════════════ */
-  function openThemePanel() {
-    document.getElementById('themeOverlay').classList.add('open');
-    document.getElementById('themePanel').classList.add('open');
-  }
-
-  function closeThemePanel() {
-    document.getElementById('themeOverlay').classList.remove('open');
-    document.getElementById('themePanel').classList.remove('open');
-  }
-
-  const ALL_THEMES = ['forest','ocean','violet','ember','arctic','obsidian','mint','golden','cherry','lavender','peach','sky'];
-
-  function applyTheme(name, card) {
-    ALL_THEMES.forEach(t => document.body.classList.remove('theme-' + t));
-    document.body.classList.add('theme-' + name);
-    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-    card.classList.add('active');
-    setTimeout(closeThemePanel, 240);
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const def = document.querySelector('.theme-card[data-theme="forest"]');
-    if (def) def.classList.add('active');
   });
-
-  /* ══════════════════════════════════════
-     BARCODE GENERATOR
-  ══════════════════════════════════════ */
-  function copyText(text, el) {
-    navigator.clipboard.writeText(text);
-    const msg = el.querySelector(".copy-msg");
-    msg.style.display = "inline";
-    setTimeout(() => msg.style.display = "none", 1200);
-  }
-
-  function padLeft(str, length) { return str.toString().padStart(length, '0'); }
-
-  function calculateCheckDigit(input) {
-    let sum = 0;
-    for (let i = 0; i < input.length; i++) {
-      const digit = parseInt(input[input.length - 1 - i], 10);
-      sum += digit * ((i % 2 === 0) ? 3 : 1);
+  Quagga.onDetected(function(result) {
+    if (!scannerRunning) return;
+    const code = (result.codeResult.code || '').replace(/\D/g, '');
+    if (!/^(\d{13}|\d{8})$/.test(code)) return;
+    if (code === lastCode) { hitCount++; } else { lastCode = code; hitCount = 1; }
+    if (hitCount >= CONFIRM_HITS) {
+      scannerRunning = false;
+      document.getElementById('productCode').value = code;
+      setStatus('✓ Got it: ' + code, 'success');
+      setTimeout(closeScanner, 700);
     }
-    return (10 - (sum % 10)) % 10;
+  });
+}
+
+function handleCameraError(err) {
+  const name = err && (err.name || err.type || '');
+  if (/NotAllowed|PermissionDenied/i.test(name))
+    setStatus('Camera permission denied. Check browser settings.', 'error');
+  else if (/NotFound|DevicesNotFound/i.test(name))
+    setStatus('No camera found on this device.', 'error');
+  else if (/NotReadable/i.test(name))
+    setStatus('Camera is in use by another app.', 'error');
+  else
+    setStatus('Could not start camera. Try closing other apps.', 'error');
+  console.error('[Camera error]', err);
+}
+
+/* ══════════════════════════════════════════════════════
+   THEME
+══════════════════════════════════════════════════════ */
+function openThemePanel()  { document.getElementById('themeOverlay').classList.add('open');    document.getElementById('themePanel').classList.add('open'); }
+function closeThemePanel() { document.getElementById('themeOverlay').classList.remove('open'); document.getElementById('themePanel').classList.remove('open'); }
+const ALL_THEMES = ['forest','ocean','violet','ember','arctic','obsidian','mint','golden','cherry','lavender','peach','sky'];
+function applyTheme(name, card) {
+  ALL_THEMES.forEach(t => document.body.classList.remove('theme-' + t));
+  document.body.classList.add('theme-' + name);
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  setTimeout(closeThemePanel, 240);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const def = document.querySelector('.theme-card[data-theme="forest"]');
+  if (def) def.classList.add('active');
+});
+
+/* ══════════════════════════════════════════════════════
+   BARCODE GENERATOR
+══════════════════════════════════════════════════════ */
+function copyText(text, el) {
+  navigator.clipboard.writeText(text);
+  const msg = el.querySelector('.copy-msg');
+  msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 1200);
+}
+function padLeft(str, length) { return str.toString().padStart(length, '0'); }
+function calculateCheckDigit(input) {
+  let sum = 0;
+  for (let i = 0; i < input.length; i++) {
+    const d = parseInt(input[input.length - 1 - i], 10);
+    sum += d * ((i % 2 === 0) ? 3 : 1);
   }
-
-  function formatPrice(pence) {
-    const p = parseInt(pence, 10);
-    if (isNaN(p) || p <= 0) return '';
-    if (p < 100) return p + 'p';
-    const pounds = Math.floor(p / 100);
-    const rem = p % 100;
-    return rem === 0 ? `£${pounds}.00` : `£${pounds}.${String(rem).padStart(2,'0')}`;
-  }
-
-  function generateBarcode() {
-    const productInput = document.getElementById('productCode').value;
-    const priceInput   = document.getElementById('price').value;
-    const labelInput   = document.getElementById('barcodeLabelInput').value;
-
-    if (!productInput || productInput.length < 8) {
-      alert("Enter a valid barcode (at least 8 digits).");
-      return;
-    }
-
-    document.getElementById("barcodeLabel").innerText = labelInput;
-    document.getElementById("barcodePrice").innerText = formatPrice(priceInput);
-
-    const numericProduct = productInput.replace(/\D/g, '');
-    let productDigits = numericProduct.length === 14 ? numericProduct.slice(0, -1) : numericProduct;
-    productDigits = padLeft(productDigits, 13);
-
-    const paddedPrice = padLeft(priceInput, 6);
-    const baseNumber  = `91${productDigits}${paddedPrice}`;
-    const checkDigit  = calculateCheckDigit(baseNumber);
-    const fullBarcode = `${baseNumber}${checkDigit}`;
-
-    JsBarcode("#barcodeCanvas", fullBarcode, {
-      format: "CODE128",
-      displayValue: true,
-      fontSize: 8,
-      width: 2,
-      height: 80,
-      margin: 5
-    });
-  }
-
-  function setPriceAndGenerate(pence) {
-    document.getElementById('price').value = pence;
-    document.getElementById('customPriceContainer').style.display = 'none';
-    generateBarcode();
-  }
-
-  function showCustomPrice() {
-    document.getElementById('customPriceContainer').style.display = 'block';
-  }
+  return (10 - (sum % 10)) % 10;
+}
+function formatPrice(pence) {
+  const p = parseInt(pence, 10);
+  if (isNaN(p) || p <= 0) return '';
+  if (p < 100) return p + 'p';
+  const pounds = Math.floor(p / 100), rem = p % 100;
+  return rem === 0 ? `£${pounds}.00` : `£${pounds}.${String(rem).padStart(2,'0')}`;
+}
+function generateBarcode() {
+  const productInput = document.getElementById('productCode').value;
+  const priceInput   = document.getElementById('price').value;
+  const labelInput   = document.getElementById('barcodeLabelInput').value;
+  if (!productInput || productInput.length < 8) { alert('Enter a valid barcode (at least 8 digits).'); return; }
+  document.getElementById('barcodeLabel').innerText = labelInput;
+  document.getElementById('barcodePrice').innerText = formatPrice(priceInput);
+  const numericProduct = productInput.replace(/\D/g, '');
+  let productDigits = numericProduct.length === 14 ? numericProduct.slice(0,-1) : numericProduct;
+  productDigits = padLeft(productDigits, 13);
+  const paddedPrice = padLeft(priceInput, 6);
+  const baseNumber  = `91${productDigits}${paddedPrice}`;
+  const checkDigit  = calculateCheckDigit(baseNumber);
+  JsBarcode('#barcodeCanvas', `${baseNumber}${checkDigit}`, { format:'CODE128', displayValue:true, fontSize:8, width:2, height:80, margin:5 });
+}
+function setPriceAndGenerate(pence) {
+  document.getElementById('price').value = pence;
+  document.getElementById('customPriceContainer').style.display = 'none';
+  generateBarcode();
+}
+function showCustomPrice() { document.getElementById('customPriceContainer').style.display = 'block'; }
 </script>
 </body>
 </html>
