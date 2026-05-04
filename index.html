@@ -681,17 +681,19 @@
 <script>
   /* ══════════════════════════════════════
      SCANNER
+     Uses decodeFromConstraints with facingMode:environment
+     — works on iOS Safari, Android Chrome, desktop.
+     Avoids listVideoInputDevices() which fails on iOS
+     before camera permission is granted.
   ══════════════════════════════════════ */
   let codeReader = null;
-  let currentStream = null;
-  let scanning = false;
-  let devices = [];
+  let scanning   = false;
 
-  async function openScanner() {
+  function openScanner() {
     document.getElementById('scannerOverlay').classList.add('open');
     document.getElementById('scannerModal').classList.add('open');
-    setStatus('Starting camera...', '');
-    await startScanner();
+    setStatus('Starting camera…', '');
+    startScanner();
   }
 
   function closeScannerFromOverlay(e) {
@@ -711,106 +713,117 @@
     el.className = 'scanner-status' + (cls ? ' ' + cls : '');
   }
 
-  async function startScanner() {
+  function startScanner() {
+    if (!window.ZXing) {
+      setStatus('Scanner library not loaded.', 'error');
+      return;
+    }
+
+    // Check getUserMedia is available (needed for HTTPS / modern browsers)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus('Camera not supported on this browser.', 'error');
+      return;
+    }
+
     try {
-      if (!window.ZXing) { setStatus('Scanner library not loaded.', 'error'); return; }
-
       codeReader = new ZXing.BrowserMultiFormatReader();
+      scanning = true;
 
-      // Get available cameras
-      devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+      // Request rear camera directly via facingMode — no device enumeration
+      // needed, so iOS Safari grants permission properly.
+      const constraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width:  { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
 
-      if (devices.length === 0) {
-        setStatus('No camera found.', 'error');
-        return;
-      }
+      setStatus('Point camera at a barcode...', '');
 
-      // If multiple cameras, show selector (prefer rear camera)
-      if (devices.length > 1) {
-        const sel = document.getElementById('cameraSelect');
-        sel.innerHTML = '';
-        devices.forEach((d, i) => {
-          const opt = document.createElement('option');
-          opt.value = d.deviceId;
-          opt.text = d.label || `Camera ${i + 1}`;
-          sel.appendChild(opt);
-        });
+      codeReader.decodeFromConstraints(constraints, 'scannerVideo', (result, err) => {
+        if (!scanning) return;
 
-        // Auto-select rear camera if available
-        const rearIdx = devices.findIndex(d =>
-          /back|rear|environment/i.test(d.label)
-        );
-        if (rearIdx >= 0) sel.selectedIndex = rearIdx;
+        if (result) {
+          const raw    = result.getText();
+          const digits = raw.replace(/\D/g, '');
+          // Accept EAN-13 (13 digits) or EAN-8 / UPC-E (8 digits)
+          const match  = digits.match(/(\d{13}|\d{8})/);
+          if (match) {
+            const code = match[1];
+            document.getElementById('productCode').value = code;
+            setStatus('✓ Got it: ' + code, 'success');
+            scanning = false;
+            setTimeout(closeScanner, 850);
+          }
+        }
 
-        document.getElementById('cameraSelectWrap').style.display = 'block';
-      }
-
-      const selectedId = devices.length > 1
-        ? document.getElementById('cameraSelect').value
-        : devices[0].deviceId;
-
-      beginDecode(selectedId);
+        // ZXing fires err on every frame with no barcode — safe to ignore
+        if (err && !(err instanceof ZXing.NotFoundException)) {
+          console.warn('ZXing:', err);
+        }
+      });
 
     } catch (err) {
       console.error(err);
-      if (err.name === 'NotAllowedError') {
-        setStatus('Camera permission denied.', 'error');
-      } else {
-        setStatus('Could not access camera.', 'error');
-      }
+      handleCameraError(err);
     }
   }
 
-  function beginDecode(deviceId) {
-    scanning = true;
-    setStatus('Point camera at a barcode...', '');
-
-    codeReader.decodeFromVideoDevice(deviceId, 'scannerVideo', (result, err) => {
-      if (!scanning) return;
-
-      if (result) {
-        const raw = result.getText();
-        // Extract only digits
-        const digits = raw.replace(/\D/g, '');
-
-        // Accept 8-digit (EAN-8) or 13-digit (EAN-13) sequences
-        const match = digits.match(/(\d{13}|\d{8})/);
-        if (match) {
-          const code = match[1];
-          document.getElementById('productCode').value = code;
-          setStatus(`✓ Scanned: ${code}`, 'success');
-          scanning = false;
-
-          // Brief pause so user sees the success message, then close
-          setTimeout(() => {
-            closeScanner();
-          }, 900);
-        }
-      }
-
-      // Ignore err — ZXing throws continuously when nothing is in frame
-    });
+  function handleCameraError(err) {
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      setStatus('Camera permission denied. Check browser settings.', 'error');
+    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      setStatus('No camera found on this device.', 'error');
+    } else if (err.name === 'NotReadableError') {
+      setStatus('Camera is in use by another app.', 'error');
+    } else if (err.name === 'OverconstrainedError') {
+      // Rear camera not available — retry with any camera
+      retryWithAnyCamera();
+    } else {
+      setStatus('Could not start camera.', 'error');
+    }
   }
 
-  function switchCamera() {
-    if (!codeReader) return;
-    codeReader.reset();
-    const id = document.getElementById('cameraSelect').value;
-    beginDecode(id);
+  function retryWithAnyCamera() {
+    try {
+      codeReader = new ZXing.BrowserMultiFormatReader();
+      scanning = true;
+      setStatus('Point camera at a barcode...', '');
+      codeReader.decodeFromConstraints({ video: true }, 'scannerVideo', (result, err) => {
+        if (!scanning) return;
+        if (result) {
+          const digits = result.getText().replace(/\D/g, '');
+          const match  = digits.match(/(\d{13}|\d{8})/);
+          if (match) {
+            document.getElementById('productCode').value = match[1];
+            setStatus('✓ Got it: ' + match[1], 'success');
+            scanning = false;
+            setTimeout(closeScanner, 850);
+          }
+        }
+      });
+    } catch (e) {
+      setStatus('Could not access camera.', 'error');
+    }
   }
 
   function stopScanner() {
     scanning = false;
     if (codeReader) {
-      try { codeReader.reset(); } catch(e) {}
+      try { codeReader.reset(); } catch (e) {}
       codeReader = null;
     }
+    // Belt-and-braces: kill any live tracks directly
     const video = document.getElementById('scannerVideo');
     if (video && video.srcObject) {
       video.srcObject.getTracks().forEach(t => t.stop());
       video.srcObject = null;
     }
   }
+
+  // Unused but kept so HTML onclick doesn't error if called
+  function switchCamera() {}
 
   /* ══════════════════════════════════════
      THEME
